@@ -10,14 +10,15 @@ import (
 	"github.com/luzmareto/go-grpc-ecommerce-be/internal/handler"
 	"github.com/luzmareto/go-grpc-ecommerce-be/pb/service"
 	"github.com/luzmareto/go-grpc-ecommerce-be/pkg/database"
-	"google.golang.org/grpc"            //import manual
-	"google.golang.org/grpc/reflection" //import manual
+	"github.com/luzmareto/go-grpc-ecommerce-be/pkg/grpcmiddleware" //import manual
+	"google.golang.org/grpc"                                       //import manual
+	"google.golang.org/grpc/reflection"                            //import manual
 )
 
 func main() {
 	ctx := context.Background()
 	godotenv.Load()
-	lis, err := net.Listen("tcp", ":50051")
+	lis, err := net.Listen("tcp", ":50052")
 	if err != nil {
 		log.Panicf("error when listen %v", err)
 	}
@@ -27,7 +28,11 @@ func main() {
 
 	serviceHandler := handler.NewServiceHandler()
 
-	serv := grpc.NewServer()
+	serv := grpc.NewServer(
+		grpc.ChainUnaryInterceptor(
+			grpcmiddleware.ErrorMiddleware,
+		),
+	)
 
 	service.RegisterHelloWorldServiceServer(serv, serviceHandler)
 
@@ -36,7 +41,7 @@ func main() {
 		log.Println("Reflection is registered.")
 	}
 
-	log.Println("Server is runing on :50051 port.")
+	log.Println("Server is runing on :50052 port.")
 	if err := serv.Serve(lis); err != nil {
 		log.Panicf("Server is error %v", err)
 	}
