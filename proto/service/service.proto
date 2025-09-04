@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+package service;
+// generated proto protoc --go_out=./pb --go-grpc_out=./pb --proto_path=./proto --go_opt=paths=source_relative --go-grpc_opt=paths=source_relative service/service.proto
+
+option go_package = "github.com/luzmareto/go-grpc-ecommerce-be/pb/service"; //import manual
+
+service HelloWorldService {
+    rpc HelloWorld (HelloWordlRequest) returns (HelloWorldResponse);
+}
+
+message HelloWordlRequest {
+    string name = 1;
+}
+
+message HelloWorldResponse{
+    string message = 1;
+}
