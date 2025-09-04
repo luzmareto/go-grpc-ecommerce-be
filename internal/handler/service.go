@@ -13,10 +13,21 @@ type serivceHandler struct {
 }
 
 func (sh *serivceHandler) HelloWorld(ctx context.Context, request *service.HelloWordlRequest) (*service.HelloWorldResponse, error) {
+	validationErrors, err := utils.CheckValidation(request)
+	if err != nil {
+		return nil, err
+	}
+	if validationErrors != nil {
+		return &service.HelloWorldResponse{
+			Base: utils.ValidationErrorResponse(validationErrors),
+		}, nil
+	}
+
 	return &service.HelloWorldResponse{
-		Message: fmt.Sprintf("Hello %s", request.Name),
+		Message: fmt.Sprintf("hello %s", request.Name),
 		Base:    utils.SuccessResponse("Success"),
 	}, nil
+
 }
 
 func NewServiceHandler() *serivceHandler {
