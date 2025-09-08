@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"log"
 
 	"github.com/luzmareto/go-grpc-ecommerce-be/internal/entity"
 )
@@ -58,6 +59,7 @@ func (ar *authRepository) InsertUser(ctx context.Context, user *entity.User) err
 		user.IsDeleted,
 	)
 	if err != nil {
+		log.Printf("[ERROR][InsertUser] gagal insert user %s: %v", user.Email, err)
 		return err
 	}
 	return nil

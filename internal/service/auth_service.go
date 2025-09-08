@@ -40,7 +40,7 @@ func (as *authService) Register(ctx context.Context, request *auth.RegisterReque
 	}
 
 	// hash passwrd
-	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), 10)
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(request.Password), 10)
 	if err != nil {
 		return nil, err
 	}
