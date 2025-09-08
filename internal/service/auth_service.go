@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"errors"
+	"log"
 	"os"
 	"time"
 
@@ -86,14 +87,17 @@ func (as *authService) Login(ctx context.Context, request *auth.LoginRequest) (*
 	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(request.Password))
 	if err != nil {
 		if errors.Is(err, bcrypt.ErrMismatchedHashAndPassword) {
+			log.Println("Password mismatch error:", err) // Tambahkan log ini
 			return nil, status.Errorf(codes.Unauthenticated, "Unauthenticated")
 		}
+		log.Println("Unexpected bcrypt error:", err)
+
 		return nil, err
 	}
 
 	// generate jwt
 	now := time.Now()
-	token := jwt.NewWithClaims(jwt.SigningMethodES256, entity.JwtClaims{
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, entity.JwtClaims{
 		RegisteredClaims: jwt.RegisteredClaims{
 			Subject:   user.Id,
 			ExpiresAt: jwt.NewNumericDate(now.Add(time.Hour * 24)),

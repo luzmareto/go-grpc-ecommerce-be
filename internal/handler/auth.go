@@ -49,7 +49,7 @@ func (sh *authHandler) Login(ctx context.Context, request *auth.LoginRequest) (*
 	// process Register
 	res, err := sh.authService.Login(ctx, request)
 	if err != nil {
-		return res, nil
+		return nil, err
 	}
 
 	return res, nil
