@@ -28,7 +28,7 @@ func (sh *authHandler) Register(ctx context.Context, request *auth.RegisterReque
 	// process Register
 	res, err := sh.authService.Register(ctx, request)
 	if err != nil {
-
+		return nil, err
 	}
 
 	return res, nil
@@ -46,9 +46,10 @@ func (sh *authHandler) Login(ctx context.Context, request *auth.LoginRequest) (*
 		}, nil
 	}
 
+	// process Register
 	res, err := sh.authService.Login(ctx, request)
 	if err != nil {
-		return nil, err
+		return res, nil
 	}
 
 	return res, nil
