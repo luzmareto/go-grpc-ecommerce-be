@@ -8,11 +8,13 @@ import (
 
 	"github.com/joho/godotenv" //import manual
 	"github.com/luzmareto/go-grpc-ecommerce-be/internal/handler"
-	"github.com/luzmareto/go-grpc-ecommerce-be/pb/service"
+	"github.com/luzmareto/go-grpc-ecommerce-be/internal/repository"
+	"github.com/luzmareto/go-grpc-ecommerce-be/internal/service"
+	"github.com/luzmareto/go-grpc-ecommerce-be/pb/auth"
 	"github.com/luzmareto/go-grpc-ecommerce-be/pkg/database"
-	"github.com/luzmareto/go-grpc-ecommerce-be/pkg/grpcmiddleware" //import manual
-	"google.golang.org/grpc"                                       //import manual
-	"google.golang.org/grpc/reflection"                            //import manual
+	grpcmiddleware "github.com/luzmareto/go-grpc-ecommerce-be/pkg/grpcMiddleware"
+	"google.golang.org/grpc"            //import manual
+	"google.golang.org/grpc/reflection" //import manual
 )
 
 func main() {
@@ -23,10 +25,12 @@ func main() {
 		log.Panicf("error when listen %v", err)
 	}
 
-	database.ConnectDB(ctx, os.Getenv("DB_URI"))
+	db := database.ConnectDB(ctx, os.Getenv("DB_URI"))
 	log.Println("Connected to database")
 
-	serviceHandler := handler.NewServiceHandler()
+	authRepository := repository.NewAuthRepository(db)
+	authService := service.NewAuthService(authRepository)
+	authHandler := handler.NewAuthHandler(authService)
 
 	serv := grpc.NewServer(
 		grpc.ChainUnaryInterceptor(
@@ -34,7 +38,7 @@ func main() {
 		),
 	)
 
-	service.RegisterHelloWorldServiceServer(serv, serviceHandler)
+	auth.RegisterAuthServiceServer(serv, authHandler)
 
 	if os.Getenv("ENVIRONMENT") == "dev" {
 		reflection.Register(serv)
