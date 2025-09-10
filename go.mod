@@ -14,7 +14,7 @@ require (
 	google.golang.org/protobuf v1.36.6
 )
 
-require github.com/patrickmn/go-cache v2.1.0+incompatible // indirect
+require github.com/patrickmn/go-cache v2.1.0+incompatible
 
 require (
 	cel.dev/expr v0.24.0 // indirect
