@@ -66,12 +66,28 @@ func (sh *authHandler) Logout(ctx context.Context, request *auth.LogoutRequest) 
 		}, nil
 	}
 
-	// process Register
 	res, err := sh.authService.Logout(ctx, request)
 	if err != nil {
 		return nil, err
 	}
 
+	return res, nil
+}
+
+func (sh *authHandler) ChangePassword(ctx context.Context, request *auth.ChangePasswordRequest) (*auth.ChangePasswordResponse, error) {
+	validationErrors, err := utils.CheckValidation(request)
+	if err != nil {
+		return nil, err
+	}
+	if validationErrors != nil {
+		return &auth.ChangePasswordResponse{
+			Base: utils.ValidationErrorResponse(validationErrors),
+		}, nil
+	}
+	res, err := sh.authService.ChangePassword(ctx, request)
+	if err != nil {
+		return nil, err
+	}
 	return res, nil
 }
 

@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"log"
+	"time"
 
 	"github.com/luzmareto/go-grpc-ecommerce-be/internal/entity"
 )
@@ -12,6 +13,7 @@ import (
 type IAuthRepository interface {
 	GetUserByEmail(ctx context.Context, email string) (*entity.User, error)
 	InsertUser(ctx context.Context, user *entity.User) error
+	UpdateUserPassword(ctx context.Context, userID string, hashedNewPasswrod string, updateBy string) error
 }
 
 type authRepository struct {
@@ -63,6 +65,22 @@ func (ar *authRepository) InsertUser(ctx context.Context, user *entity.User) err
 		log.Printf("[ERROR][InsertUser] gagal insert user %s: %v", user.Email, err)
 		return err
 	}
+	return nil
+}
+
+func (ar *authRepository) UpdateUserPassword(ctx context.Context, userID string, hashedNewPasswrod string, updateBy string) error {
+	_, err := ar.db.ExecContext(
+		ctx,
+		"UPDATE \"user\" SET password = $1, updated_at = $2, updated_by = $3 WHERE id = $4",
+		hashedNewPasswrod,
+		time.Now(),
+		updateBy,
+		userID,
+	)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
