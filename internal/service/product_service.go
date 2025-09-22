@@ -2,6 +2,8 @@ package service
 
 import (
 	"context"
+	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/google/uuid"
@@ -28,6 +30,18 @@ func (ps *productService) CreateProduct(ctx context.Context, request *product.Cr
 	// hanya admin yang bisa create product
 	if claims.Role != entity.UserRoleAdmin {
 		return nil, utils.UnauthenticatedResponse()
+	}
+
+	imagePath := filepath.Join("storage", "product",request.ImageFileName)
+	_, err = os.Stat(imagePath)
+	if err != nil {
+		if os.IsNotExist(err){
+			return  &product.CreateProductResponse{
+				Base: utils.BadRequestResponse("file not found"),
+			}, nil
+		}
+
+		return nil, err
 	}
 
 	productEntity := entity.Product{
