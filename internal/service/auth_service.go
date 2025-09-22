@@ -124,7 +124,7 @@ func (as *authService) Login(ctx context.Context, request *auth.LoginRequest) (*
 	// kirim response
 	return &auth.LoginResponse{
 		Base:       utils.SuccessResponse("Login successful"),
-		AccesToken: accessToken,
+		AccessToken: accessToken,
 	}, nil
 }
 

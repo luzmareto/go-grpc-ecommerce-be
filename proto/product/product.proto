@@ -1,0 +1,27 @@
+syntax = "proto3";
+
+option go_package = "github.com/luzmareto/go-grpc-ecommerce-be/pb/product"; //import manual
+//protoc --go_out=./pb --go-grpc_out=./pb --proto_path=./proto --go_opt=paths=source_relative --go-grpc_opt=paths=source_relative product/product.proto
+
+
+import "common/base_response.proto";
+import "buf/validate/validate.proto";
+
+package product;
+
+service ProductService {
+    rpc CreateProduct (CreateProductRequest) returns (CreateProductResponse);
+}
+
+message CreateProductRequest {
+    string name = 1 [(buf.validate.field).string = { min_len: 1, max_len: 255 }];
+    string description = 2 [(buf.validate.field).string = { min_len: 1, max_len: 255 }];
+    double price = 3 [(buf.validate.field).double.gte = 0];
+    string image_file_name = 4 [(buf.validate.field).string = { min_len: 1, max_len: 255 }];
+
+}
+
+message CreateProductResponse {
+    common.BaseResponse base = 1;
+    string id = 2;    
+}

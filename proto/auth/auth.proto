@@ -37,7 +37,7 @@ message LoginRequest {
 
 message LoginResponse {
     common.BaseResponse base = 1;
-    string acces_token = 2;
+    string access_token = 2;
   }
 
 message LogoutRequest {}

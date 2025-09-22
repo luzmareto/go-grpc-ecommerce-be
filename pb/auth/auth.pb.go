@@ -191,7 +191,7 @@ func (x *LoginRequest) GetPassword() string {
 type LoginResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Base          *common.BaseResponse   `protobuf:"bytes,1,opt,name=base,proto3" json:"base,omitempty"`
-	AccesToken    string                 `protobuf:"bytes,2,opt,name=acces_token,json=accesToken,proto3" json:"acces_token,omitempty"`
+	AccessToken   string                 `protobuf:"bytes,2,opt,name=access_token,json=accessToken,proto3" json:"access_token,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -233,9 +233,9 @@ func (x *LoginResponse) GetBase() *common.BaseResponse {
 	return nil
 }
 
-func (x *LoginResponse) GetAccesToken() string {
+func (x *LoginResponse) GetAccessToken() string {
 	if x != nil {
-		return x.AccesToken
+		return x.AccessToken
 	}
 	return ""
 }
@@ -562,11 +562,10 @@ const file_auth_auth_proto_rawDesc = "" +
 	"\fLoginRequest\x12\"\n" +
 	"\x05email\x18\x01 \x01(\tB\f\xbaH\tr\a\x10\x01\x18\xff\x01`\x01R\x05email\x12&\n" +
 	"\bpassword\x18\x02 \x01(\tB\n" +
-	"\xbaH\ar\x05\x10\x01\x18\xff\x01R\bpassword\"Z\n" +
+	"\xbaH\ar\x05\x10\x01\x18\xff\x01R\bpassword\"\\\n" +
 	"\rLoginResponse\x12(\n" +
-	"\x04base\x18\x01 \x01(\v2\x14.common.BaseResponseR\x04base\x12\x1f\n" +
-	"\vacces_token\x18\x02 \x01(\tR\n" +
-	"accesToken\"\x0f\n" +
+	"\x04base\x18\x01 \x01(\v2\x14.common.BaseResponseR\x04base\x12!\n" +
+	"\faccess_token\x18\x02 \x01(\tR\vaccessToken\"\x0f\n" +
 	"\rLogoutRequest\":\n" +
 	"\x0eLogoutResponse\x12(\n" +
 	"\x04base\x18\x01 \x01(\v2\x14.common.BaseResponseR\x04base\"\xbd\x01\n" +

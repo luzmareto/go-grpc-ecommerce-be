@@ -13,6 +13,7 @@ import (
 	"github.com/luzmareto/go-grpc-ecommerce-be/internal/repository"
 	"github.com/luzmareto/go-grpc-ecommerce-be/internal/service"
 	"github.com/luzmareto/go-grpc-ecommerce-be/pb/auth"
+	"github.com/luzmareto/go-grpc-ecommerce-be/pb/product"
 	"github.com/luzmareto/go-grpc-ecommerce-be/pkg/database"
 	gocache "github.com/patrickmn/go-cache"
 	"google.golang.org/grpc"            //import manual
@@ -38,6 +39,11 @@ func main() {
 	authService := service.NewAuthService(authRepository, cacheService)
 	authHandler := handler.NewAuthHandler(authService)
 
+
+	productRepository := repository.NewProductRepository(db)
+	productService := service.NewProductService(productRepository)
+	productHandler := handler.NewProductHandler(productService)
+
 	serv := grpc.NewServer(
 		grpc.ChainUnaryInterceptor(
 			grpcmiddleware.ErrorMiddleware,
@@ -46,6 +52,7 @@ func main() {
 	)
 
 	auth.RegisterAuthServiceServer(serv, authHandler)
+	product.RegisterProductServiceServer(serv, productHandler)
 
 	if os.Getenv("ENVIRONMENT") == "dev" {
 		reflection.Register(serv)
