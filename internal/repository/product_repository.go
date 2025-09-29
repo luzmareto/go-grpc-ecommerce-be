@@ -5,6 +5,8 @@ import (
 	"database/sql"
 	"errors"
 
+	"github.com/google/uuid"
+
 	"github.com/luzmareto/go-grpc-ecommerce-be/internal/entity"
 )
 
@@ -41,12 +43,20 @@ func (repo *productRepository) CreateNewProduct(ctx context.Context, product *en
 	return nil
 }
 
+func UUIDOrNil(s string) any {
+	if _, err := uuid.Parse(s); err != nil {
+		return nil
+	}
+	return  s
+}
+
 func (repo *productRepository)	GetProductById(ctx context.Context, id string) (*entity.Product, error){
+	idParam := UUIDOrNil(id)
 	var productEntity entity.Product
 	row := repo.db.QueryRowContext(
 		ctx,
 		"SELECT id, name, description, price, image_file_name FROM product WHERE id = $1 AND is_deleted = false",
-		id,
+		idParam,
 	)
 	if row.Err() != nil {
 		return nil, row.Err()
