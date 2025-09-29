@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"time"
 
 	"github.com/google/uuid"
 
@@ -14,6 +15,7 @@ type IProductRepository interface {
 	CreateNewProduct(ctx context.Context, product *entity.Product) error
 	GetProductById(ctx context.Context, id string) (*entity.Product, error)
 	UpdateProduct(ctx context.Context, product *entity.Product) error
+	DeleteProduct(ctx context.Context, id string, deletedAt time.Time, deletedBy string) error
 }
 
 type productRepository struct {
@@ -90,6 +92,21 @@ func (repo *productRepository) UpdateProduct(ctx context.Context, product *entit
 		product.UpdatedAt,
 		product.UpdatedBy,
 		product.Id,
+	)
+
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (repo *productRepository) DeleteProduct(ctx context.Context, id string, deletedAt time.Time, deletedBy string) error {
+	_, err := repo.db.ExecContext(
+		ctx,
+		"UPDATE product SET deleted_at = $1, deleted_by = $2, is_deleted = true WHERE id = $3",
+		deletedAt,
+		deletedBy,
+		id,
 	)
 
 	if err != nil {

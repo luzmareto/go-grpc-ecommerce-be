@@ -19,6 +19,7 @@ type IProductService interface {
 	CreateProduct(ctx context.Context, request *product.CreateProductRequest) (*product.CreateProductResponse, error)
 	DetailProduct(ctx context.Context,request *product.DetailProductRequest) (*product.DetailProductResponse, error)
 	EditProduct(ctx context.Context, request *product.EditProductRequest) (*product.EditProductResponse, error)
+	DeleteProduct(ctx context.Context, request *product.DeleteProductRequest) (*product.DeleteProductResponse, error)
 }
 
 type productService struct {
@@ -148,6 +149,45 @@ func (ps *productService) EditProduct(ctx context.Context, request *product.Edit
 		Id: request.Id,
 	}, nil
 }
+func (ps *productService) DeleteProduct(ctx context.Context, request *product.DeleteProductRequest) (*product.DeleteProductResponse, error) {
+	claims, err := jwtentity.GetClaimsFromContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+	// hanya admin yang bisa create product
+	if claims.Role != entity.UserRoleAdmin {
+		return nil, utils.UnauthenticatedResponse()
+	}
+	
+	
+	productEntity, err := ps.productRepository.GetProductById(ctx,request.Id)
+	if err != nil {
+		return nil, err
+	}
+	if productEntity == nil {
+		return  &product.DeleteProductResponse{
+			Base: utils.NotFoundResponse("Product not found"),
+		}, nil
+	}
+
+	err = ps.productRepository.DeleteProduct(ctx, request.Id, time.Now(), claims.FullName)
+	if err != nil {
+		return nil, err
+	}
+
+	imagePath := filepath.Join("storage", "product", productEntity.ImageFileName)
+	err = os.Remove(imagePath)
+	if err != nil {
+		return nil, err
+	}
+	
+
+	return &product.DeleteProductResponse{
+		Base: utils.SuccessResponse("Delete product success"),
+	}, nil
+}
+
+
 
 func NewProductService(productRepository repository.IProductRepository) IProductService {
 	return &productService{
