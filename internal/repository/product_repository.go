@@ -13,6 +13,7 @@ import (
 type IProductRepository interface {
 	CreateNewProduct(ctx context.Context, product *entity.Product) error
 	GetProductById(ctx context.Context, id string) (*entity.Product, error)
+	UpdateProduct(ctx context.Context, product *entity.Product) error
 }
 
 type productRepository struct {
@@ -47,10 +48,10 @@ func UUIDOrNil(s string) any {
 	if _, err := uuid.Parse(s); err != nil {
 		return nil
 	}
-	return  s
+	return s
 }
 
-func (repo *productRepository)	GetProductById(ctx context.Context, id string) (*entity.Product, error){
+func (repo *productRepository) GetProductById(ctx context.Context, id string) (*entity.Product, error) {
 	idParam := UUIDOrNil(id)
 	var productEntity entity.Product
 	row := repo.db.QueryRowContext(
@@ -70,12 +71,31 @@ func (repo *productRepository)	GetProductById(ctx context.Context, id string) (*
 		&productEntity.ImageFileName,
 	)
 	if err != nil {
-		if errors.Is(err, sql.ErrNoRows){
-			return  nil, nil
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, nil
 		}
 	}
 
 	return &productEntity, nil
+}
+
+func (repo *productRepository) UpdateProduct(ctx context.Context, product *entity.Product) error {
+	_, err := repo.db.ExecContext(
+		ctx,
+		"UPDATE product SET name=$1, description=$2, price=$3, image_file_name=$4, updated_at=$5, updated_by=$6 WHERE id =$7",
+		product.Name,
+		product.Description,
+		product.Price,
+		product.ImageFileName,
+		product.UpdatedAt,
+		product.UpdatedBy,
+		product.Id,
+	)
+
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func NewProductRepository(db *sql.DB) IProductRepository {
