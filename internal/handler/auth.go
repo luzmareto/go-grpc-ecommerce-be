@@ -14,6 +14,7 @@ type authHandler struct {
 	authService service.IAuthService
 }
 
+
 func (sh *authHandler) Register(ctx context.Context, request *auth.RegisterRequest) (*auth.RegisterResponse, error) {
 	validationErrors, err := utils.CheckValidation(request)
 	if err != nil {

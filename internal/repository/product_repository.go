@@ -118,8 +118,7 @@ func (repo *productRepository) DeleteProduct(ctx context.Context, id string, del
 }
 
 func (repo *productRepository) GetProductsPagination(ctx context.Context, pagination *common.PaginationRequest) ([]*entity.Product, *common.PaginationResponse, error) {
-
- 	row :=repo.db.QueryRowContext(ctx, "SELECT COUNT(*) FROM product WHERE is_deleted = false")
+ 	row := repo.db.QueryRowContext(ctx, "SELECT COUNT(*) FROM product WHERE is_deleted = false")
 	if row.Err() != nil {
 		return  nil, nil, row.Err()
 	}
@@ -133,9 +132,10 @@ func (repo *productRepository) GetProductsPagination(ctx context.Context, pagina
 
 	offset := (pagination.CurrentPage -1) * pagination.ItemPerPage
 	totalPages := (totalCount + int(pagination.ItemPerPage) - 1) / int(pagination.ItemPerPage)
+	
 	rows, err := repo.db.QueryContext(
 		ctx,
-		"SELECT id, name, description, price, image_file_name FROM product WHERE is_deleted = false LIMIT $1 OFFSET $2",
+		"SELECT id, name, description, price, image_file_name FROM product WHERE is_deleted = false ORDER BY created_at DESC LIMIT $1 OFFSET $2",
 		pagination.ItemPerPage,
 		offset,
 
@@ -146,7 +146,7 @@ func (repo *productRepository) GetProductsPagination(ctx context.Context, pagina
 	}	
 
 	var products []*entity.Product = make([]*entity.Product, 0)
-	if rows.Next() {
+	for rows.Next() {
 		var product entity.Product
 
 		err = rows.Scan(

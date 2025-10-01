@@ -95,7 +95,7 @@ validationErrors, err := utils.CheckValidation(request)
 }
 
 func (ph *productHandler) ListProduct(ctx context.Context, request *product.ListProductRequest) (*product.ListProductResponse, error) {
-validationErrors, err := utils.CheckValidation(request)
+	validationErrors, err := utils.CheckValidation(request)
 	if err != nil {
 		return nil, err
 	}
