@@ -17,15 +17,17 @@ import (
 
 type IProductService interface {
 	CreateProduct(ctx context.Context, request *product.CreateProductRequest) (*product.CreateProductResponse, error)
-	DetailProduct(ctx context.Context,request *product.DetailProductRequest) (*product.DetailProductResponse, error)
+	DetailProduct(ctx context.Context, request *product.DetailProductRequest) (*product.DetailProductResponse, error)
 	EditProduct(ctx context.Context, request *product.EditProductRequest) (*product.EditProductResponse, error)
 	DeleteProduct(ctx context.Context, request *product.DeleteProductRequest) (*product.DeleteProductResponse, error)
 	ListProduct(ctx context.Context, request *product.ListProductRequest) (*product.ListProductResponse, error)
+	ListProductAdmin(ctx context.Context, request *product.ListProductAdminRequest) (*product.ListProductAdminResponse, error)
 }
 
 type productService struct {
 	productRepository repository.IProductRepository
 }
+
 
 func (ps *productService) CreateProduct(ctx context.Context, request *product.CreateProductRequest) (*product.CreateProductResponse, error) {
 	claims, err := jwtentity.GetClaimsFromContext(ctx)
@@ -37,11 +39,11 @@ func (ps *productService) CreateProduct(ctx context.Context, request *product.Cr
 		return nil, utils.UnauthenticatedResponse()
 	}
 
-	imagePath := filepath.Join("storage", "product",request.ImageFileName)
+	imagePath := filepath.Join("storage", "product", request.ImageFileName)
 	_, err = os.Stat(imagePath)
 	if err != nil {
-		if os.IsNotExist(err){
-			return  &product.CreateProductResponse{
+		if os.IsNotExist(err) {
+			return &product.CreateProductResponse{
 				Base: utils.BadRequestResponse("file not found"),
 			}, nil
 		}
@@ -69,7 +71,7 @@ func (ps *productService) CreateProduct(ctx context.Context, request *product.Cr
 	}, nil
 }
 
-func (ps *productService) DetailProduct(ctx context.Context,request *product.DetailProductRequest) (*product.DetailProductResponse, error) {
+func (ps *productService) DetailProduct(ctx context.Context, request *product.DetailProductRequest) (*product.DetailProductResponse, error) {
 	productEntity, err := ps.productRepository.GetProductById(ctx, request.Id)
 	if err != nil {
 		return nil, err
@@ -80,12 +82,12 @@ func (ps *productService) DetailProduct(ctx context.Context,request *product.Det
 		}, nil
 	}
 	return &product.DetailProductResponse{
-		Base: utils.SuccessResponse("Get product detail success"),
-		Id: productEntity.Id,
-		Name: productEntity.Name,
+		Base:        utils.SuccessResponse("Get product detail success"),
+		Id:          productEntity.Id,
+		Name:        productEntity.Name,
 		Description: productEntity.Description,
-		Price: productEntity.Price,
-		ImageUrl: fmt.Sprintf("%s/product/%s", os.Getenv("STORAGE_SERVICE_URL"), productEntity.ImageFileName),
+		Price:       productEntity.Price,
+		ImageUrl:    fmt.Sprintf("%s/product/%s", os.Getenv("STORAGE_SERVICE_URL"), productEntity.ImageFileName),
 	}, nil
 }
 
@@ -98,20 +100,19 @@ func (ps *productService) EditProduct(ctx context.Context, request *product.Edit
 	if claims.Role != entity.UserRoleAdmin {
 		return nil, utils.UnauthenticatedResponse()
 	}
-	
-	
-	productEntity, err := ps.productRepository.GetProductById(ctx,request.Id)
+
+	productEntity, err := ps.productRepository.GetProductById(ctx, request.Id)
 	if err != nil {
 		return nil, err
 	}
 	if productEntity == nil {
-		return  &product.EditProductResponse{
+		return &product.EditProductResponse{
 			Base: utils.NotFoundResponse("Product not found"),
 		}, nil
 	}
 
-	// delete gambar lama 
-	if productEntity.ImageFileName != request.ImageFileName{
+	// delete gambar lama
+	if productEntity.ImageFileName != request.ImageFileName {
 		newImagePath := filepath.Join("storage", "product", request.ImageFileName)
 		_, err = os.Stat(newImagePath)
 		if err != nil {
@@ -131,13 +132,13 @@ func (ps *productService) EditProduct(ctx context.Context, request *product.Edit
 	}
 
 	newProduct := entity.Product{
-		Id: request.Id,
-		Name: request.Name,
-		Description: request.Description,
-		Price: request.Price,
+		Id:            request.Id,
+		Name:          request.Name,
+		Description:   request.Description,
+		Price:         request.Price,
 		ImageFileName: request.ImageFileName,
-		UpdatedAt: time.Now(),
-		UpdatedBy: &claims.FullName,
+		UpdatedAt:     time.Now(),
+		UpdatedBy:     &claims.FullName,
 	}
 
 	err = ps.productRepository.UpdateProduct(ctx, &newProduct)
@@ -147,7 +148,7 @@ func (ps *productService) EditProduct(ctx context.Context, request *product.Edit
 
 	return &product.EditProductResponse{
 		Base: utils.SuccessResponse("Edit product success"),
-		Id: request.Id,
+		Id:   request.Id,
 	}, nil
 }
 func (ps *productService) DeleteProduct(ctx context.Context, request *product.DeleteProductRequest) (*product.DeleteProductResponse, error) {
@@ -159,14 +160,13 @@ func (ps *productService) DeleteProduct(ctx context.Context, request *product.De
 	if claims.Role != entity.UserRoleAdmin {
 		return nil, utils.UnauthenticatedResponse()
 	}
-	
-	
-	productEntity, err := ps.productRepository.GetProductById(ctx,request.Id)
+
+	productEntity, err := ps.productRepository.GetProductById(ctx, request.Id)
 	if err != nil {
 		return nil, err
 	}
 	if productEntity == nil {
-		return  &product.DeleteProductResponse{
+		return &product.DeleteProductResponse{
 			Base: utils.NotFoundResponse("Product not found"),
 		}, nil
 	}
@@ -181,41 +181,71 @@ func (ps *productService) DeleteProduct(ctx context.Context, request *product.De
 	if err != nil {
 		return nil, err
 	}
-	
 
 	return &product.DeleteProductResponse{
 		Base: utils.SuccessResponse("Delete product success"),
 	}, nil
 }
 
-
-
 func (ps *productService) ListProduct(ctx context.Context, request *product.ListProductRequest) (*product.ListProductResponse, error) {
-	products,paginationResponse, err := ps.productRepository.GetProductsPagination(ctx, request.Pagination)
+	products, paginationResponse, err := ps.productRepository.GetProductsPagination(ctx, request.Pagination)
 	if err != nil {
 		return nil, err
 	}
 
 	var data []*product.ListProductResponseItem = make([]*product.ListProductResponseItem, 0)
-	for _, prod := range products{
-		data = append(data,  &product.ListProductResponseItem{
-			Id: prod.Id,
-			Name: prod.Name,
+	for _, prod := range products {
+		data = append(data, &product.ListProductResponseItem{
+			Id:          prod.Id,
+			Name:        prod.Name,
 			Description: prod.Description,
-			Price: prod.Price,
-			ImageUrl: fmt.Sprintf("%s/products/%s", os.Getenv("STORAGE_SERVICE_URL"), prod.ImageFileName),
+			Price:       prod.Price,
+			ImageUrl:    fmt.Sprintf("%s/products/%s", os.Getenv("STORAGE_SERVICE_URL"), prod.ImageFileName),
 		})
 	}
 
 	return &product.ListProductResponse{
-		Base: utils.SuccessResponse("Get list product success"),
+		Base:       utils.SuccessResponse("Get list product success"),
 		Pagination: paginationResponse,
-		Data: data,
+		Data:       data,
 	}, nil
 }
 
 
-	 
+
+func (ps *productService) ListProductAdmin(ctx context.Context, request *product.ListProductAdminRequest) (*product.ListProductAdminResponse, error) {
+	claims, err := jwtentity.GetClaimsFromContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+	// hanya admin yang bisa create product
+	if claims.Role != entity.UserRoleAdmin {
+		return nil, utils.UnauthenticatedResponse()
+	}
+
+	products, paginationResponse, err := ps.productRepository.GetProductsPaginationAdmin(ctx, request.Pagination)
+	if err != nil {
+		return nil, err
+	}
+
+	var data []*product.ListProductAdminResponseItem = make([]*product.ListProductAdminResponseItem, 0)
+	for _, prod := range products {
+		data = append(data, &product.ListProductAdminResponseItem{
+			Id:          prod.Id,
+			Name:        prod.Name,
+			Description: prod.Description,
+			Price:       prod.Price,
+			ImageUrl:    fmt.Sprintf("%s/products/%s", os.Getenv("STORAGE_SERVICE_URL"), prod.ImageFileName),
+		})
+	}
+
+	return &product.ListProductAdminResponse{
+		Base:       utils.SuccessResponse("Get list product admin success"),
+		Pagination: paginationResponse,
+		Data:       data,
+	}, nil
+}
+
 func NewProductService(productRepository repository.IProductRepository) IProductService {
 	return &productService{
 		productRepository: productRepository,
