@@ -133,6 +133,26 @@ func (ph *productHandler) ListProductAdmin(ctx context.Context, request *product
 
 }
 
+func (ph *productHandler) HighlightProducts(ctx context.Context,request *product.HighlightProductsRequest) (*product.HighlightProductsResponse, error) {
+	validationErrors, err := utils.CheckValidation(request)
+	if err != nil {
+		return nil, err
+	}
+	if validationErrors != nil {
+		return &product.HighlightProductsResponse{
+			Base: utils.ValidationErrorResponse(validationErrors),
+		}, nil
+	}
+
+	res, err := ph.productService.HighlightProducts(ctx, request)
+	if err != nil {
+		return nil, err
+	}
+
+	return res, nil
+
+}
+
 
 func NewProductHandler(productService service.IProductService) *productHandler {
 	return &productHandler{

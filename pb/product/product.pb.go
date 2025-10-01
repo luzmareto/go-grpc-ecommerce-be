@@ -847,6 +847,170 @@ func (x *ListProductAdminResponse) GetData() []*ListProductAdminResponseItem {
 	return nil
 }
 
+type HighlightProductsRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *HighlightProductsRequest) Reset() {
+	*x = HighlightProductsRequest{}
+	mi := &file_product_product_proto_msgTypes[14]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *HighlightProductsRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*HighlightProductsRequest) ProtoMessage() {}
+
+func (x *HighlightProductsRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_product_product_proto_msgTypes[14]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use HighlightProductsRequest.ProtoReflect.Descriptor instead.
+func (*HighlightProductsRequest) Descriptor() ([]byte, []int) {
+	return file_product_product_proto_rawDescGZIP(), []int{14}
+}
+
+type HighlightProductsResponseItem struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	Name          string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
+	Description   string                 `protobuf:"bytes,3,opt,name=description,proto3" json:"description,omitempty"`
+	Price         float64                `protobuf:"fixed64,4,opt,name=price,proto3" json:"price,omitempty"`
+	ImageUrl      string                 `protobuf:"bytes,5,opt,name=image_url,json=imageUrl,proto3" json:"image_url,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *HighlightProductsResponseItem) Reset() {
+	*x = HighlightProductsResponseItem{}
+	mi := &file_product_product_proto_msgTypes[15]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *HighlightProductsResponseItem) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*HighlightProductsResponseItem) ProtoMessage() {}
+
+func (x *HighlightProductsResponseItem) ProtoReflect() protoreflect.Message {
+	mi := &file_product_product_proto_msgTypes[15]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use HighlightProductsResponseItem.ProtoReflect.Descriptor instead.
+func (*HighlightProductsResponseItem) Descriptor() ([]byte, []int) {
+	return file_product_product_proto_rawDescGZIP(), []int{15}
+}
+
+func (x *HighlightProductsResponseItem) GetId() string {
+	if x != nil {
+		return x.Id
+	}
+	return ""
+}
+
+func (x *HighlightProductsResponseItem) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+func (x *HighlightProductsResponseItem) GetDescription() string {
+	if x != nil {
+		return x.Description
+	}
+	return ""
+}
+
+func (x *HighlightProductsResponseItem) GetPrice() float64 {
+	if x != nil {
+		return x.Price
+	}
+	return 0
+}
+
+func (x *HighlightProductsResponseItem) GetImageUrl() string {
+	if x != nil {
+		return x.ImageUrl
+	}
+	return ""
+}
+
+type HighlightProductsResponse struct {
+	state         protoimpl.MessageState           `protogen:"open.v1"`
+	Base          *common.BaseResponse             `protobuf:"bytes,1,opt,name=base,proto3" json:"base,omitempty"`
+	Data          []*HighlightProductsResponseItem `protobuf:"bytes,2,rep,name=data,proto3" json:"data,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *HighlightProductsResponse) Reset() {
+	*x = HighlightProductsResponse{}
+	mi := &file_product_product_proto_msgTypes[16]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *HighlightProductsResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*HighlightProductsResponse) ProtoMessage() {}
+
+func (x *HighlightProductsResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_product_product_proto_msgTypes[16]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use HighlightProductsResponse.ProtoReflect.Descriptor instead.
+func (*HighlightProductsResponse) Descriptor() ([]byte, []int) {
+	return file_product_product_proto_rawDescGZIP(), []int{16}
+}
+
+func (x *HighlightProductsResponse) GetBase() *common.BaseResponse {
+	if x != nil {
+		return x.Base
+	}
+	return nil
+}
+
+func (x *HighlightProductsResponse) GetData() []*HighlightProductsResponseItem {
+	if x != nil {
+		return x.Data
+	}
+	return nil
+}
+
 var File_product_product_proto protoreflect.FileDescriptor
 
 const file_product_product_proto_rawDesc = "" +
@@ -922,14 +1086,25 @@ const file_product_product_proto_rawDesc = "" +
 	"\n" +
 	"pagination\x18\x02 \x01(\v2\x1a.common.PaginationResponseR\n" +
 	"pagination\x129\n" +
-	"\x04data\x18\x03 \x03(\v2%.product.ListProductAdminResponseItemR\x04data2\xed\x03\n" +
+	"\x04data\x18\x03 \x03(\v2%.product.ListProductAdminResponseItemR\x04data\"\x1a\n" +
+	"\x18HighlightProductsRequest\"\x98\x01\n" +
+	"\x1dHighlightProductsResponseItem\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\x12\x12\n" +
+	"\x04name\x18\x02 \x01(\tR\x04name\x12 \n" +
+	"\vdescription\x18\x03 \x01(\tR\vdescription\x12\x14\n" +
+	"\x05price\x18\x04 \x01(\x01R\x05price\x12\x1b\n" +
+	"\timage_url\x18\x05 \x01(\tR\bimageUrl\"\x81\x01\n" +
+	"\x19HighlightProductsResponse\x12(\n" +
+	"\x04base\x18\x01 \x01(\v2\x14.common.BaseResponseR\x04base\x12:\n" +
+	"\x04data\x18\x02 \x03(\v2&.product.HighlightProductsResponseItemR\x04data2\xc9\x04\n" +
 	"\x0eProductService\x12N\n" +
 	"\rCreateProduct\x12\x1d.product.CreateProductRequest\x1a\x1e.product.CreateProductResponse\x12N\n" +
 	"\rDetailProduct\x12\x1d.product.DetailProductRequest\x1a\x1e.product.DetailProductResponse\x12H\n" +
 	"\vEditProduct\x12\x1b.product.EditProductRequest\x1a\x1c.product.EditProductResponse\x12N\n" +
 	"\rDeleteProduct\x12\x1d.product.DeleteProductRequest\x1a\x1e.product.DeleteProductResponse\x12H\n" +
 	"\vListProduct\x12\x1b.product.ListProductRequest\x1a\x1c.product.ListProductResponse\x12W\n" +
-	"\x10ListProductAdmin\x12 .product.ListProductAdminRequest\x1a!.product.ListProductAdminResponseB6Z4github.com/luzmareto/go-grpc-ecommerce-be/pb/productb\x06proto3"
+	"\x10ListProductAdmin\x12 .product.ListProductAdminRequest\x1a!.product.ListProductAdminResponse\x12Z\n" +
+	"\x11HighlightProducts\x12!.product.HighlightProductsRequest\x1a\".product.HighlightProductsResponseB6Z4github.com/luzmareto/go-grpc-ecommerce-be/pb/productb\x06proto3"
 
 var (
 	file_product_product_proto_rawDescOnce sync.Once
@@ -943,56 +1118,63 @@ func file_product_product_proto_rawDescGZIP() []byte {
 	return file_product_product_proto_rawDescData
 }
 
-var file_product_product_proto_msgTypes = make([]protoimpl.MessageInfo, 14)
+var file_product_product_proto_msgTypes = make([]protoimpl.MessageInfo, 17)
 var file_product_product_proto_goTypes = []any{
-	(*CreateProductRequest)(nil),         // 0: product.CreateProductRequest
-	(*CreateProductResponse)(nil),        // 1: product.CreateProductResponse
-	(*DetailProductRequest)(nil),         // 2: product.DetailProductRequest
-	(*DetailProductResponse)(nil),        // 3: product.DetailProductResponse
-	(*EditProductRequest)(nil),           // 4: product.EditProductRequest
-	(*EditProductResponse)(nil),          // 5: product.EditProductResponse
-	(*DeleteProductRequest)(nil),         // 6: product.DeleteProductRequest
-	(*DeleteProductResponse)(nil),        // 7: product.DeleteProductResponse
-	(*ListProductRequest)(nil),           // 8: product.ListProductRequest
-	(*ListProductResponseItem)(nil),      // 9: product.ListProductResponseItem
-	(*ListProductResponse)(nil),          // 10: product.ListProductResponse
-	(*ListProductAdminRequest)(nil),      // 11: product.ListProductAdminRequest
-	(*ListProductAdminResponseItem)(nil), // 12: product.ListProductAdminResponseItem
-	(*ListProductAdminResponse)(nil),     // 13: product.ListProductAdminResponse
-	(*common.BaseResponse)(nil),          // 14: common.BaseResponse
-	(*common.PaginationRequest)(nil),     // 15: common.PaginationRequest
-	(*common.PaginationResponse)(nil),    // 16: common.PaginationResponse
+	(*CreateProductRequest)(nil),          // 0: product.CreateProductRequest
+	(*CreateProductResponse)(nil),         // 1: product.CreateProductResponse
+	(*DetailProductRequest)(nil),          // 2: product.DetailProductRequest
+	(*DetailProductResponse)(nil),         // 3: product.DetailProductResponse
+	(*EditProductRequest)(nil),            // 4: product.EditProductRequest
+	(*EditProductResponse)(nil),           // 5: product.EditProductResponse
+	(*DeleteProductRequest)(nil),          // 6: product.DeleteProductRequest
+	(*DeleteProductResponse)(nil),         // 7: product.DeleteProductResponse
+	(*ListProductRequest)(nil),            // 8: product.ListProductRequest
+	(*ListProductResponseItem)(nil),       // 9: product.ListProductResponseItem
+	(*ListProductResponse)(nil),           // 10: product.ListProductResponse
+	(*ListProductAdminRequest)(nil),       // 11: product.ListProductAdminRequest
+	(*ListProductAdminResponseItem)(nil),  // 12: product.ListProductAdminResponseItem
+	(*ListProductAdminResponse)(nil),      // 13: product.ListProductAdminResponse
+	(*HighlightProductsRequest)(nil),      // 14: product.HighlightProductsRequest
+	(*HighlightProductsResponseItem)(nil), // 15: product.HighlightProductsResponseItem
+	(*HighlightProductsResponse)(nil),     // 16: product.HighlightProductsResponse
+	(*common.BaseResponse)(nil),           // 17: common.BaseResponse
+	(*common.PaginationRequest)(nil),      // 18: common.PaginationRequest
+	(*common.PaginationResponse)(nil),     // 19: common.PaginationResponse
 }
 var file_product_product_proto_depIdxs = []int32{
-	14, // 0: product.CreateProductResponse.base:type_name -> common.BaseResponse
-	14, // 1: product.DetailProductResponse.base:type_name -> common.BaseResponse
-	14, // 2: product.EditProductResponse.base:type_name -> common.BaseResponse
-	14, // 3: product.DeleteProductResponse.base:type_name -> common.BaseResponse
-	15, // 4: product.ListProductRequest.pagination:type_name -> common.PaginationRequest
-	14, // 5: product.ListProductResponse.base:type_name -> common.BaseResponse
-	16, // 6: product.ListProductResponse.pagination:type_name -> common.PaginationResponse
+	17, // 0: product.CreateProductResponse.base:type_name -> common.BaseResponse
+	17, // 1: product.DetailProductResponse.base:type_name -> common.BaseResponse
+	17, // 2: product.EditProductResponse.base:type_name -> common.BaseResponse
+	17, // 3: product.DeleteProductResponse.base:type_name -> common.BaseResponse
+	18, // 4: product.ListProductRequest.pagination:type_name -> common.PaginationRequest
+	17, // 5: product.ListProductResponse.base:type_name -> common.BaseResponse
+	19, // 6: product.ListProductResponse.pagination:type_name -> common.PaginationResponse
 	9,  // 7: product.ListProductResponse.data:type_name -> product.ListProductResponseItem
-	15, // 8: product.ListProductAdminRequest.pagination:type_name -> common.PaginationRequest
-	14, // 9: product.ListProductAdminResponse.base:type_name -> common.BaseResponse
-	16, // 10: product.ListProductAdminResponse.pagination:type_name -> common.PaginationResponse
+	18, // 8: product.ListProductAdminRequest.pagination:type_name -> common.PaginationRequest
+	17, // 9: product.ListProductAdminResponse.base:type_name -> common.BaseResponse
+	19, // 10: product.ListProductAdminResponse.pagination:type_name -> common.PaginationResponse
 	12, // 11: product.ListProductAdminResponse.data:type_name -> product.ListProductAdminResponseItem
-	0,  // 12: product.ProductService.CreateProduct:input_type -> product.CreateProductRequest
-	2,  // 13: product.ProductService.DetailProduct:input_type -> product.DetailProductRequest
-	4,  // 14: product.ProductService.EditProduct:input_type -> product.EditProductRequest
-	6,  // 15: product.ProductService.DeleteProduct:input_type -> product.DeleteProductRequest
-	8,  // 16: product.ProductService.ListProduct:input_type -> product.ListProductRequest
-	11, // 17: product.ProductService.ListProductAdmin:input_type -> product.ListProductAdminRequest
-	1,  // 18: product.ProductService.CreateProduct:output_type -> product.CreateProductResponse
-	3,  // 19: product.ProductService.DetailProduct:output_type -> product.DetailProductResponse
-	5,  // 20: product.ProductService.EditProduct:output_type -> product.EditProductResponse
-	7,  // 21: product.ProductService.DeleteProduct:output_type -> product.DeleteProductResponse
-	10, // 22: product.ProductService.ListProduct:output_type -> product.ListProductResponse
-	13, // 23: product.ProductService.ListProductAdmin:output_type -> product.ListProductAdminResponse
-	18, // [18:24] is the sub-list for method output_type
-	12, // [12:18] is the sub-list for method input_type
-	12, // [12:12] is the sub-list for extension type_name
-	12, // [12:12] is the sub-list for extension extendee
-	0,  // [0:12] is the sub-list for field type_name
+	17, // 12: product.HighlightProductsResponse.base:type_name -> common.BaseResponse
+	15, // 13: product.HighlightProductsResponse.data:type_name -> product.HighlightProductsResponseItem
+	0,  // 14: product.ProductService.CreateProduct:input_type -> product.CreateProductRequest
+	2,  // 15: product.ProductService.DetailProduct:input_type -> product.DetailProductRequest
+	4,  // 16: product.ProductService.EditProduct:input_type -> product.EditProductRequest
+	6,  // 17: product.ProductService.DeleteProduct:input_type -> product.DeleteProductRequest
+	8,  // 18: product.ProductService.ListProduct:input_type -> product.ListProductRequest
+	11, // 19: product.ProductService.ListProductAdmin:input_type -> product.ListProductAdminRequest
+	14, // 20: product.ProductService.HighlightProducts:input_type -> product.HighlightProductsRequest
+	1,  // 21: product.ProductService.CreateProduct:output_type -> product.CreateProductResponse
+	3,  // 22: product.ProductService.DetailProduct:output_type -> product.DetailProductResponse
+	5,  // 23: product.ProductService.EditProduct:output_type -> product.EditProductResponse
+	7,  // 24: product.ProductService.DeleteProduct:output_type -> product.DeleteProductResponse
+	10, // 25: product.ProductService.ListProduct:output_type -> product.ListProductResponse
+	13, // 26: product.ProductService.ListProductAdmin:output_type -> product.ListProductAdminResponse
+	16, // 27: product.ProductService.HighlightProducts:output_type -> product.HighlightProductsResponse
+	21, // [21:28] is the sub-list for method output_type
+	14, // [14:21] is the sub-list for method input_type
+	14, // [14:14] is the sub-list for extension type_name
+	14, // [14:14] is the sub-list for extension extendee
+	0,  // [0:14] is the sub-list for field type_name
 }
 
 func init() { file_product_product_proto_init() }
@@ -1006,7 +1188,7 @@ func file_product_product_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_product_product_proto_rawDesc), len(file_product_product_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   14,
+			NumMessages:   17,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

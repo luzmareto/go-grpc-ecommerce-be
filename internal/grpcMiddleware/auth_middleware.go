@@ -13,11 +13,13 @@ type authMiddleware struct {
 	cacheService *gocache.Cache
 }
 
+//api yang tidak perlu login
 var publicApis = map[string]bool{
 	 "/auth.AuthService/Login": true,
 	 "/auth.AuthService/Register": true,
 	 "/product.ProductService/DetailProduct": true,
 	 "/product.ProductService/ListProduct": true,
+	 "/product.ProductService/HighlightProducts": true,
 }
 
 
