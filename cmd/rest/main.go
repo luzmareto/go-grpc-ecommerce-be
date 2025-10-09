@@ -44,7 +44,7 @@ func main() {
 
 	app.Use(cors.New())
 
-	app.Get("/storage/product/:filename", handlerGetFileName)
+	app.Get("/storage/products/:filename", handlerGetFileName)
 
 	app.Post("/product/upload", handler.UploadProductImageHandler)
 
