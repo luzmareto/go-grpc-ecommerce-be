@@ -44,7 +44,8 @@ func main() {
 
 	app.Use(cors.New())
 
-	app.Get("/storage/products/:filename", handlerGetFileName)
+		app.Get("/storage/products/:filename", handlerGetFileName) // Untuk List Product
+	app.Get("/storage/product/:filename", handlerGetFileName)  // Untuk Detail/Edit Product
 
 	app.Post("/product/upload", handler.UploadProductImageHandler)
 
