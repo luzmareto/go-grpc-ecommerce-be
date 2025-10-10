@@ -15,6 +15,7 @@ import (
 	"github.com/luzmareto/go-grpc-ecommerce-be/internal/repository"
 	"github.com/luzmareto/go-grpc-ecommerce-be/internal/service"
 	"github.com/luzmareto/go-grpc-ecommerce-be/pb/auth"
+	"github.com/luzmareto/go-grpc-ecommerce-be/pb/cart"
 	"github.com/luzmareto/go-grpc-ecommerce-be/pb/product"
 	"github.com/luzmareto/go-grpc-ecommerce-be/pkg/database"
 	gocache "github.com/patrickmn/go-cache"
@@ -44,6 +45,10 @@ func main() {
 	productRepository := repository.NewProductRepository(db)
 	productService := service.NewProductService(productRepository)
 	productHandler := handler.NewProductHandler(productService)
+	
+	cartRepository := repository.NewCartRepository(db)
+	cartService := service.NewCartService(productRepository, cartRepository)
+	cartHandler := handler.NewCartHandler(cartService)
 
 	serv := grpc.NewServer(
 		grpc.ChainUnaryInterceptor(
@@ -54,6 +59,7 @@ func main() {
 
 	auth.RegisterAuthServiceServer(serv, authHandler)
 	product.RegisterProductServiceServer(serv, productHandler)
+	cart.RegisterCartServiceServer(serv, cartHandler)
 
 	if os.Getenv("ENVIRONMENT") == "dev" {
 		reflection.Register(serv)
