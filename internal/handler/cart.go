@@ -52,7 +52,24 @@ func (ch *cartHandler)  ListCart(ctx context.Context,request *cart.ListCartReque
 
 	return  res, nil
 }
+func (ch *cartHandler) DeleteCart(ctx context.Context,request *cart.DeleteCartRequest) (*cart.DeleteCartResponse, error){
+	validationErrors, err := utils.CheckValidation(request)
+	if err != nil {
+		return nil, err
+	}
+	if validationErrors != nil {
+		return &cart.DeleteCartResponse{
+			Base: utils.ValidationErrorResponse(validationErrors),
+		}, nil
+	}
 
+	res, err := ch.cartService.DeleteCart (ctx, request)
+	if err != nil {
+		return nil, err
+	}
+
+	return  res, nil
+}
 func NewCartHandler(cartService service.ICartService) *cartHandler {
 	return &cartHandler{
 		cartService: cartService,
