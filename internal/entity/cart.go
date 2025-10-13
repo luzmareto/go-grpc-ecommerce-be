@@ -11,4 +11,6 @@ type UserCart struct {
 	CreatedBy string
 	UpdatedAt *time.Time
 	UpdatedBy *string
+
+	Product *Product
 }

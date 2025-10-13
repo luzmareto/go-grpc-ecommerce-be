@@ -2,6 +2,8 @@ package service
 
 import (
 	"context"
+	"fmt"
+	"os"
 	"time"
 
 	"github.com/google/uuid"
@@ -14,6 +16,7 @@ import (
 
 type ICartService interface {
 	AddProductToCart(ctx context.Context, request *cart.AddProductToCartRequest) (*cart.AddProductToCartResponse, error)
+	ListCart(ctx context.Context,request *cart.ListCartRequest) (*cart.ListCartResponse, error)
 }
 
 type cartService struct {
@@ -78,6 +81,38 @@ func (cs *cartService) AddProductToCart(ctx context.Context, request *cart.AddPr
 		Base: utils.SuccessResponse(" Add product to cart success"),
 		Id: newCartEntity.Id,
 	},nil
+}
+
+func (cs *cartService) ListCart(ctx context.Context,request *cart.ListCartRequest) (*cart.ListCartResponse, error){
+	claims, err := jwtentity.GetClaimsFromContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	carts, err :=  cs.cartRepository.GetlistCart(ctx, claims.Subject)
+	if err != nil {
+		return nil, err
+	}
+
+	var items []*cart.ListCartResponseItem = make([]*cart.ListCartResponseItem, 0)
+	for _, cartEntity := range carts {
+		item := cart.ListCartResponseItem{
+			CartId: cartEntity.Id,
+			ProductId: cartEntity.Product.Id,
+			ProductName: cartEntity.Product.Name,
+			ProductImageUrl: fmt.Sprintf("%s/product/%s", os.Getenv("STORAGE_SERVICE_URL"), cartEntity.Product.ImageFileName),
+			ProductPrice: cartEntity.Product.Price,
+			Quantity: int64(cartEntity.Quantity),
+		}
+	
+	items = append(items, &item)
+	}
+
+	return &cart.ListCartResponse{
+		Base: utils.SuccessResponse("Get list cart success"),
+		Items: items,
+	},nil
+	
 }
 
 func NewCartService(productRepository repository.IProductRepository, cartRepository repository.ICartRepository) ICartService {
