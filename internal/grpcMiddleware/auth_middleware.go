@@ -19,7 +19,9 @@ var publicApis = map[string]bool{
 	 "/auth.AuthService/Register": true,
 	 "/product.ProductService/DetailProduct": true,
 	 "/product.ProductService/ListProduct": true,
+	 "/product.ProductService/ListProducts": true,
 	 "/product.ProductService/HighlightProducts": true,
+	 "/product.ProductService/HighlightProduct": true,
 }
 
 
