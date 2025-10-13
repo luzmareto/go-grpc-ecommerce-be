@@ -18,6 +18,7 @@ type ICartService interface {
 	AddProductToCart(ctx context.Context, request *cart.AddProductToCartRequest) (*cart.AddProductToCartResponse, error)
 	ListCart(ctx context.Context,request *cart.ListCartRequest) (*cart.ListCartResponse, error)
 	DeleteCart(ctx context.Context,request *cart.DeleteCartRequest) (*cart.DeleteCartResponse, error)
+	UpdateCartQuantity(ctx context.Context, request *cart.UpdateCartQuantityRequest) (*cart.UpdateCartQuantityResponse, error)
 }
 
 type cartService struct {
@@ -147,6 +148,54 @@ func (cs *cartService) DeleteCart(ctx context.Context,request *cart.DeleteCartRe
 	}, nil
 }
 
+func (cs *cartService) UpdateCartQuantity(ctx context.Context, request *cart.UpdateCartQuantityRequest) (*cart.UpdateCartQuantityResponse, error){
+	claims, err := jwtentity.GetClaimsFromContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	
+	cartEntity, err := cs.cartRepository.GetCartById(ctx, request.CartId)
+	if err != nil {
+		return nil, err
+	}
+	if cartEntity == nil {
+		return  &cart.UpdateCartQuantityResponse{
+			Base: utils.NotFoundResponse("Cart not found"),
+		}, nil
+	}
+
+	if cartEntity.UserId != claims.Subject {
+		return  &cart.UpdateCartQuantityResponse{
+			Base: utils.BadRequestResponse("Cart user is not matched"),
+		}, nil		
+	}
+
+	if request.NewQuantity == 0 {
+		err =cs.cartRepository.DeleteCart(ctx, request.CartId)
+		if err != nil {
+			return nil, err
+		}
+
+		return &cart.UpdateCartQuantityResponse{
+			Base: utils.SuccessResponse("Update cart quantity success"),
+		}, nil
+	}
+	now := time.Now()
+	cartEntity.Quantity = int(request.NewQuantity)
+	cartEntity.UpdatedAt = &now
+	cartEntity.UpdatedBy = &claims.FullName
+
+	err = cs.cartRepository.UpdateCart(ctx, cartEntity)
+	if err != nil {
+		return nil, err
+	}
+
+	return &cart.UpdateCartQuantityResponse{
+		Base: utils.SuccessResponse("Update cart quantity success"),
+	}, nil
+
+}
 
 func NewCartService(productRepository repository.IProductRepository, cartRepository repository.ICartRepository) ICartService {
 	return  &cartService{
