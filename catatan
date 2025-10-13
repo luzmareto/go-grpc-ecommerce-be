@@ -1,3 +1,4 @@
 BRANCH MERGE SOLVED DIMULAI PADA:
 NO  NAMA BRANCH                     DESKRIPSI
 1.  API-List-Item-di-Cart           PENAMBAHAN FITUR LIST CART(KERANJANG)
+2.  API-Hapus-Cart                  Menghapus satu baris keranjang
