@@ -146,8 +146,8 @@ func (cr *cartRepository) GetCartById (ctx context.Context, cartId string) (*ent
 		&cart.Quantity,
 		&cart.CreatedAt,
 		&cart.CreatedBy,
-		&cart.CreatedAt,
-		&cart.CreatedBy,
+		&cart.UpdatedAt,
+		&cart.UpdatedBy,
 	)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows){
