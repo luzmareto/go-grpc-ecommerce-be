@@ -20,6 +20,7 @@ import (
 	"github.com/luzmareto/go-grpc-ecommerce-be/pb/product"
 	"github.com/luzmareto/go-grpc-ecommerce-be/pkg/database"
 	gocache "github.com/patrickmn/go-cache"
+	"github.com/xendit/xendit-go"
 	"google.golang.org/grpc"            //import manual
 	"google.golang.org/grpc/reflection" //import manual
 )
@@ -27,6 +28,9 @@ import (
 func main() {
 	ctx := context.Background()
 	godotenv.Load()
+
+	xendit.Opt.SecretKey = os.Getenv("XENDIT_SECRET")
+	
 	lis, err := net.Listen("tcp", ":50052")
 	if err != nil {
 		log.Panicf("error when listen %v", err)
