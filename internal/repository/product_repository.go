@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -16,6 +17,7 @@ import (
 type IProductRepository interface {
 	CreateNewProduct(ctx context.Context, product *entity.Product) error
 	GetProductById(ctx context.Context, id string) (*entity.Product, error)
+	GetProductsByIds(ctx context.Context, ids []string) ([]*entity.Product, error)
 	UpdateProduct(ctx context.Context, product *entity.Product) error
 	DeleteProduct(ctx context.Context, id string, deletedAt time.Time, deletedBy string) error
 	GetProductsPagination(ctx context.Context, pagination *common.PaginationRequest) ([]*entity.Product, *common.PaginationResponse, error)
@@ -85,6 +87,40 @@ func (repo *productRepository) GetProductById(ctx context.Context, id string) (*
 
 	return &productEntity, nil
 }
+
+func (repo *productRepository)	GetProductsByIds(ctx context.Context, ids []string) ([]*entity.Product, error){
+	queryIds := make([]string, len(ids))
+	for i, id := range ids {
+		queryIds[i] = fmt.Sprintf("'%s'", id)
+	}
+	rows, err := repo.db.QueryContext(
+		ctx,
+		fmt.Sprintf("SELECT id, name, price, image_file_name FROM product WHERE id IN (%s) AND is_deleted =false", strings.Join(queryIds, ", ")),
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	var products []*entity.Product = make([]*entity.Product, 0)
+	for rows.Next() {
+		var productEntity entity.Product
+		err = rows.Scan(
+			&productEntity.Id,
+			&productEntity.Name,
+			&productEntity.Price,
+			&productEntity.ImageFileName,
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		products = append(products, &productEntity)
+	}
+
+	return products, nil
+}
+
+
 
 func (repo *productRepository) UpdateProduct(ctx context.Context, product *entity.Product) error {
 	_, err := repo.db.ExecContext(
