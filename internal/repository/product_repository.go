@@ -12,9 +12,11 @@ import (
 
 	"github.com/luzmareto/go-grpc-ecommerce-be/internal/entity"
 	"github.com/luzmareto/go-grpc-ecommerce-be/pb/common"
+	"github.com/luzmareto/go-grpc-ecommerce-be/pkg/database"
 )
 
 type IProductRepository interface {
+	WithTransaction(tx *sql.Tx) IProductRepository
 	CreateNewProduct(ctx context.Context, product *entity.Product) error
 	GetProductById(ctx context.Context, id string) (*entity.Product, error)
 	GetProductsByIds(ctx context.Context, ids []string) ([]*entity.Product, error)
@@ -26,7 +28,13 @@ type IProductRepository interface {
 }
 
 type productRepository struct {
-	db *sql.DB
+	db database.DatabaseQuery
+}
+
+func (repo *productRepository) WithTransaction(tx *sql.Tx) IProductRepository{
+	return &productRepository{
+		db: tx,
+	}
 }
 
 func (repo *productRepository) CreateNewProduct(ctx context.Context, product *entity.Product) error {
@@ -314,7 +322,7 @@ func (repo *productRepository) GetProductHighlight(ctx context.Context) ([]*enti
 
 	return products, nil
 }
-func NewProductRepository(db *sql.DB) IProductRepository {
+func NewProductRepository(db database.DatabaseQuery) IProductRepository {
 	return &productRepository{
 		db: db,
 	}

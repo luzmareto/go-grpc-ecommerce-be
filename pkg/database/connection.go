@@ -14,6 +14,8 @@ func ConnectDB(ctx context.Context, connstr string) *sql.DB {
 		panic(err)
 	}
 
+
+
 	err = db.PingContext(ctx)
 	if err != nil {
 		panic(err)
