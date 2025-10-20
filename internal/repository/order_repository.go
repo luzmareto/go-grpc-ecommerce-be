@@ -6,9 +6,11 @@ import (
 	"errors"
 
 	"github.com/luzmareto/go-grpc-ecommerce-be/internal/entity"
+	"github.com/luzmareto/go-grpc-ecommerce-be/pkg/database"
 )
 
 type IOrderRepository interface {
+	WithTrancastion(tx *sql.Tx) IOrderRepository
 	GetNumbering(ctx context.Context, module string) (*entity.Numbering, error)
 	CreateOrder(ctx context.Context, order *entity.Order) error
 	UpdateNumbering(ctx context.Context, numbering *entity.Numbering) error
@@ -16,13 +18,19 @@ type IOrderRepository interface {
 }
 
 type orderRepository struct {
-	db *sql.DB
+	db database.DatabaseQuery
+}
+
+func (os *orderRepository) WithTrancastion(tx *sql.Tx) IOrderRepository{
+	return &orderRepository{
+		db: tx,
+}
 }
 
 func (os *orderRepository) GetNumbering(ctx context.Context, module string) (*entity.Numbering, error) {
 	row := os.db.QueryRowContext(
 		ctx,
-		"SELECT module, number FROM numbering WHERE module = $1",
+		"SELECT module, number FROM numbering WHERE module = $1 FOR UPDATE",
 		module,
 	)
 	if row.Err() != nil {
@@ -113,7 +121,7 @@ func (or *orderRepository) CreateOrderItem(ctx context.Context, orderItem *entit
 	return nil
 }
 
-func NewOrderRepository(db *sql.DB) IOrderRepository {
+func NewOrderRepository(db database.DatabaseQuery) IOrderRepository {
 	return &orderRepository{
 		db: db,
 	}
