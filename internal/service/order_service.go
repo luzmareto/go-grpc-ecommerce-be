@@ -65,7 +65,7 @@ func (os *orderService) CreateOrder(ctx context.Context, request *order.CreateOr
 		productIds[i] = request.Products[i].Id
 	}
 
-	products, err := productRepo.GetProductsByIds(ctx, productIds)
+	products, err := productRepo.GetProductsByIds(ctx,productIds)
 	if err != nil {
 		return nil, err
 	}
