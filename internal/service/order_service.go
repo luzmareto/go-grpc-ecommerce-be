@@ -4,16 +4,18 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	operatingsystem "os"
 	"runtime/debug"
 	"time"
 
+	"github.com/google/uuid"
+	"github.com/luzmareto/go-grpc-ecommerce-be/internal/entity"
 	jwtentity "github.com/luzmareto/go-grpc-ecommerce-be/internal/entity/jwt"
 	"github.com/luzmareto/go-grpc-ecommerce-be/internal/repository"
 	"github.com/luzmareto/go-grpc-ecommerce-be/internal/utils"
-
-	"github.com/google/uuid"
-	"github.com/luzmareto/go-grpc-ecommerce-be/internal/entity"
 	"github.com/luzmareto/go-grpc-ecommerce-be/pb/order"
+	"github.com/xendit/xendit-go"
+	"github.com/xendit/xendit-go/invoice"
 )
 
 type IOrderService interface {
@@ -84,6 +86,7 @@ func (os *orderService) CreateOrder(ctx context.Context, request *order.CreateOr
 		}
 		total += productMap[p.Id].Price * float64(p.Quantity)
 	}
+
 	now := time.Now()
 	expiredAt := now.Add(24 * time.Hour)
 	orderEntity := entity.Order{
@@ -100,6 +103,35 @@ func (os *orderService) CreateOrder(ctx context.Context, request *order.CreateOr
 		CreatedAt:       now,
 		CreatedBy:       claims.FullName,
 	}
+
+	invoiceItems := make([]xendit.InvoiceItem, 0)
+	for _, p := range request.Products {
+		prod := productMap[p.Id]
+		if prod != nil {
+			invoiceItems = append(invoiceItems, xendit.InvoiceItem{
+				Name: prod.Name,
+				Price: prod.Price,
+				Quantity: int(p.Quantity),
+			})
+		}
+	}
+	xenditInvoice, xenditErr := invoice.CreateWithContext(ctx, &invoice.CreateParams{
+			ExternalID: orderEntity.Id,
+			Amount: total,
+			Customer: xendit.InvoiceCustomer{
+				GivenNames: claims.FullName,
+			},
+			Currency: "IDR",
+			SuccessRedirectURL: fmt.Sprintf("%s/checkout/%s/success", operatingsystem.Getenv("FRONTEND_BASE_URL"), orderEntity.Id),
+			Items: invoiceItems,
+		})
+		if xenditErr != nil {
+			err = xenditErr
+			return nil, err
+		}
+
+	orderEntity.XenditInvoiceId = &xenditInvoice.ID
+	orderEntity.XenditInvoiceUrl = &xenditInvoice.InvoiceURL
 
 	err = orderRepo.CreateOrder(ctx, &orderEntity)
 	if err != nil {
@@ -119,6 +151,8 @@ func (os *orderService) CreateOrder(ctx context.Context, request *order.CreateOr
 			CreatedAt:            now,
 			CreatedBy:            claims.FullName,
 		}
+
+
 
 		err = orderRepo.CreateOrderItem(ctx, &orderItem)
 		if err != nil {

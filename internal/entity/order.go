@@ -28,6 +28,11 @@ type Order struct {
 	DeletedAt       *time.Time
 	DeletedBy       *string
 	IsDeleted       bool
+	XenditInvoiceId *string
+	XenditInvoiceUrl *string
+	XenditPaidAt 		*time.Time
+	XenditPaymentMethod *string
+	XenditPaymentChannel *string
 }
 
 type OrderItem struct {
