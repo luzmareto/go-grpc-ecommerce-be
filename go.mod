@@ -17,6 +17,7 @@ require (
 require (
 	github.com/gofiber/fiber/v2 v2.52.9
 	github.com/patrickmn/go-cache v2.1.0+incompatible
+	github.com/xendit/xendit-go v1.0.2
 )
 
 require (
@@ -33,7 +34,6 @@ require (
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/fasthttp v1.51.0 // indirect
 	github.com/valyala/tcplisten v1.0.0 // indirect
-	github.com/xendit/xendit-go v1.0.2 // indirect
 )
 
 require (
