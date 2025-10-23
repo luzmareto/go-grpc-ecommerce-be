@@ -23,6 +23,7 @@ type IOrderService interface {
 	CreateOrder(ctx context.Context, request *order.CreateOrderRequest) (*order.CreateOrderResponse, error)
 	ListOrderAdmin(ctx context.Context, request *order.ListOrderAdminRequest) (*order.ListOrderAdminResponse, error)
 	ListOrder(ctx context.Context, request *order.ListOrderRequest) (*order.ListOrderResponse, error)
+	DetailOrder(ctx context.Context, request *order.DetailOrderRequest) (*order.DetailOrderResponse, error)
 }
 
 type orderService struct {
@@ -229,58 +230,113 @@ func (os *orderService) ListOrderAdmin(ctx context.Context, request *order.ListO
 }
 
 func (os *orderService) ListOrder(ctx context.Context, request *order.ListOrderRequest) (*order.ListOrderResponse, error) {
-	{
-		claims, err := jwtentity.GetClaimsFromContext(ctx)
-		if err != nil {
-			return nil, err
-		}
+	claims, err := jwtentity.GetClaimsFromContext(ctx)
+	if err != nil {
+		return nil, err
+	}
 
-		orders, metadata, err := os.orderRepository.GetListOrderPagination(ctx, request.Pagination, claims.Subject)
-		if err != nil {
-			return nil,
-				err
-		}
+	orders, metadata, err := os.orderRepository.GetListOrderPagination(ctx, request.Pagination, claims.Subject)
+	if err != nil {
+		return nil,
+			err
+	}
 
-		items := make([]*order.ListOrderResponseItem, 0)
-		for _, o := range orders {
+	items := make([]*order.ListOrderResponseItem, 0)
+	for _, o := range orders {
 
-			products := make([]*order.ListOrderResponseItemProduct, 0)
-			for _, oi := range o.Items {
-				products = append(products, &order.ListOrderResponseItemProduct{
-					Id:       oi.ProductId,
-					Name:     oi.ProductName,
-					Price:    oi.ProductPrice,
-					Quantity: oi.Quantity,
-				})
-			}
-
-			orderStatusCode := o.OrderStatusCode
-			if o.OrderStatusCode == entity.OrderStatusCodeUnpaid && time.Now().After(*o.ExpiredAt) {
-				orderStatusCode = entity.OrderStatusCodeExpired
-			}
-
-			xenditInoviceUrl := ""
-			if o.XenditInvoiceUrl != nil {
-				xenditInoviceUrl = *o.XenditInvoiceUrl
-			}
-			items = append(items, &order.ListOrderResponseItem{
-				Id:              o.Id,
-				Number:          o.Number,
-				Customer:        o.UserFullName,
-				StatusCode:      orderStatusCode,
-				Total:           o.Total,
-				CreatedAt:       timestamppb.New(o.CreatedAt),
-				Products:        products,
-				XenditNvoiceUrl: xenditInoviceUrl,
+		products := make([]*order.ListOrderResponseItemProduct, 0)
+		for _, oi := range o.Items {
+			products = append(products, &order.ListOrderResponseItemProduct{
+				Id:       oi.ProductId,
+				Name:     oi.ProductName,
+				Price:    oi.ProductPrice,
+				Quantity: oi.Quantity,
 			})
 		}
 
-		return &order.ListOrderResponse{
-			Base:       utils.SuccessResponse("Get list order success"),
-			Pagination: metadata,
-			Items:      items,
+		orderStatusCode := o.OrderStatusCode
+		if o.OrderStatusCode == entity.OrderStatusCodeUnpaid && time.Now().After(*o.ExpiredAt) {
+			orderStatusCode = entity.OrderStatusCodeExpired
+		}
+
+		xenditInoviceUrl := ""
+		if o.XenditInvoiceUrl != nil {
+			xenditInoviceUrl = *o.XenditInvoiceUrl
+		}
+		items = append(items, &order.ListOrderResponseItem{
+			Id:              o.Id,
+			Number:          o.Number,
+			Customer:        o.UserFullName,
+			StatusCode:      orderStatusCode,
+			Total:           o.Total,
+			CreatedAt:       timestamppb.New(o.CreatedAt),
+			Products:        products,
+			XenditNvoiceUrl: xenditInoviceUrl,
+		})
+	}
+
+	return &order.ListOrderResponse{
+		Base:       utils.SuccessResponse("Get list order success"),
+		Pagination: metadata,
+		Items:      items,
+	}, nil
+}
+
+func (os *orderService) DetailOrder(ctx context.Context, request *order.DetailOrderRequest) (*order.DetailOrderResponse, error) {
+	claims, err := jwtentity.GetClaimsFromContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	orderEntity, err := os.orderRepository.GetOrderById(ctx, request.Id)
+	if err != nil {
+		return nil, err
+	}
+
+	if claims.Role != entity.UserRoleAdmin && claims.Subject != orderEntity.UserId {
+		return &order.DetailOrderResponse{
+			Base: utils.BadRequestResponse("User id is not matched"),
 		}, nil
 	}
+
+	notes := ""
+	if orderEntity.Notes != nil {
+		notes = *orderEntity.Notes
+	}
+	xenditInvoiceUrl := ""
+	if orderEntity.XenditInvoiceUrl != nil {
+		xenditInvoiceUrl = *orderEntity.XenditInvoiceUrl
+	}
+
+	orderStatusCode := orderEntity.OrderStatusCode
+	if orderEntity.OrderStatusCode == entity.OrderStatusCodeUnpaid && time.Now().After(*orderEntity.ExpiredAt) {
+		orderStatusCode = entity.OrderStatusCodeExpired
+	}
+
+	items := make([]*order.DetailOrderResponseItem, 0)
+	for _, oi := range orderEntity.Items {
+		items = append(items, &order.DetailOrderResponseItem{
+			Id:       oi.ProductId,
+			Name:     oi.ProductName,
+			Price:    oi.ProductPrice,
+			Quantity: oi.Quantity,
+		})
+	}
+	return &order.DetailOrderResponse{
+		Base:             utils.SuccessResponse("get order detail success"),
+		Id:               orderEntity.Id,
+		Number:           orderEntity.Number,
+		UserFullName:     orderEntity.UserFullName,
+		Address:          orderEntity.Address,
+		PhoneNumber:      orderEntity.PhoneNumber,
+		Notes:            notes,
+		OrderStatusCode:  orderStatusCode,
+		CreatedAt:        timestamppb.New(orderEntity.CreatedAt),
+		XenditInvoiceUrl: xenditInvoiceUrl,
+		Items:            items,
+		Total:            orderEntity.Total,
+		ExpiredAt:        timestamppb.New(*orderEntity.ExpiredAt),
+	}, nil
 }
 
 func NewOrderService(db *sql.DB, orderRepository repository.IOrderRepository, productRepository repository.IProductRepository) IOrderService {
