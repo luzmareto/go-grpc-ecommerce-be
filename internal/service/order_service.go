@@ -16,14 +16,16 @@ import (
 	"github.com/luzmareto/go-grpc-ecommerce-be/pb/order"
 	"github.com/xendit/xendit-go"
 	"github.com/xendit/xendit-go/invoice"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 type IOrderService interface {
 	CreateOrder(ctx context.Context, request *order.CreateOrderRequest) (*order.CreateOrderResponse, error)
+	ListOrderAdmin(ctx context.Context, request *order.ListOrderAdminRequest) (*order.ListOrderAdminResponse, error)
 }
 
 type orderService struct {
-	db 				 *sql.DB
+	db               *sql.DB
 	orderRepository  repository.IOrderRepository
 	productRepostory repository.IProductRepository
 }
@@ -33,12 +35,12 @@ func (os *orderService) CreateOrder(ctx context.Context, request *order.CreateOr
 	if err != nil {
 		return nil, err
 	}
-	
+
 	tx, err := os.db.Begin()
 	if err != nil {
 		return nil, err
 	}
-	defer func ()  {
+	defer func() {
 		if e := recover(); e != nil {
 			if tx != nil {
 				tx.Rollback()
@@ -46,12 +48,12 @@ func (os *orderService) CreateOrder(ctx context.Context, request *order.CreateOr
 
 			debug.PrintStack()
 			panic(e)
-		}	
+		}
 	}()
-	defer func ()  {
+	defer func() {
 		if err != nil && tx != nil {
 			tx.Rollback()
-		}	
+		}
 	}()
 
 	orderRepo := os.orderRepository.WithTrancastion(tx)
@@ -67,7 +69,7 @@ func (os *orderService) CreateOrder(ctx context.Context, request *order.CreateOr
 		productIds[i] = request.Products[i].Id
 	}
 
-	products, err := productRepo.GetProductsByIds(ctx,productIds)
+	products, err := productRepo.GetProductsByIds(ctx, productIds)
 	if err != nil {
 		return nil, err
 	}
@@ -109,26 +111,26 @@ func (os *orderService) CreateOrder(ctx context.Context, request *order.CreateOr
 		prod := productMap[p.Id]
 		if prod != nil {
 			invoiceItems = append(invoiceItems, xendit.InvoiceItem{
-				Name: prod.Name,
-				Price: prod.Price,
+				Name:     prod.Name,
+				Price:    prod.Price,
 				Quantity: int(p.Quantity),
 			})
 		}
 	}
 	xenditInvoice, xenditErr := invoice.CreateWithContext(ctx, &invoice.CreateParams{
-			ExternalID: orderEntity.Id,
-			Amount: total,
-			Customer: xendit.InvoiceCustomer{
-				GivenNames: claims.FullName,
-			},
-			Currency: "IDR",
-			SuccessRedirectURL: fmt.Sprintf("%s/checkout/%s/success", operatingsystem.Getenv("FRONTEND_BASE_URL"), orderEntity.Id),
-			Items: invoiceItems,
-		})
-		if xenditErr != nil {
-			err = xenditErr
-			return nil, err
-		}
+		ExternalID: orderEntity.Id,
+		Amount:     total,
+		Customer: xendit.InvoiceCustomer{
+			GivenNames: claims.FullName,
+		},
+		Currency:           "IDR",
+		SuccessRedirectURL: fmt.Sprintf("%s/checkout/%s/success", operatingsystem.Getenv("FRONTEND_BASE_URL"), orderEntity.Id),
+		Items:              invoiceItems,
+	})
+	if xenditErr != nil {
+		err = xenditErr
+		return nil, err
+	}
 
 	orderEntity.XenditInvoiceId = &xenditInvoice.ID
 	orderEntity.XenditInvoiceUrl = &xenditInvoice.InvoiceURL
@@ -137,7 +139,6 @@ func (os *orderService) CreateOrder(ctx context.Context, request *order.CreateOr
 	if err != nil {
 		return nil, err
 	}
-
 
 	for _, p := range request.Products {
 		var orderItem = entity.OrderItem{
@@ -151,8 +152,6 @@ func (os *orderService) CreateOrder(ctx context.Context, request *order.CreateOr
 			CreatedAt:            now,
 			CreatedBy:            claims.FullName,
 		}
-
-
 
 		err = orderRepo.CreateOrderItem(ctx, &orderItem)
 		if err != nil {
@@ -177,9 +176,60 @@ func (os *orderService) CreateOrder(ctx context.Context, request *order.CreateOr
 	}, nil
 }
 
+func (os *orderService) ListOrderAdmin(ctx context.Context, request *order.ListOrderAdminRequest) (*order.ListOrderAdminResponse, error) {
+	claims, err := jwtentity.GetClaimsFromContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+	if claims.Role != entity.UserRoleAdmin {
+		return nil, utils.UnauthenticatedResponse()
+	}
+
+	orders, metadata, err := os.orderRepository.GetListOrderAdminPagination(ctx, request.Pagination)
+	if err != nil {
+		return nil,
+			err
+	}
+
+	items := make([]*order.ListOrderAdminResponseItem, 0)
+	for _, o := range orders {
+
+		products := make([]*order.ListOrderAdminResponseItemProduct, 0)
+		for _, oi := range o.Items {
+			products = append(products, &order.ListOrderAdminResponseItemProduct{
+				Id:       oi.ProductId,
+				Name:     oi.ProductName,
+				Price:    oi.ProductPrice,
+				Quantity: oi.Quantity,
+			})
+		}
+
+		orderStatusCode := o.OrderStatusCode
+		if o.OrderStatusCode == entity.OrderStatusCodeUnpaid && time.Now().After(*o.ExpiredAt) {
+			orderStatusCode = entity.OrderStatusCodeExpired
+		}
+
+		items = append(items, &order.ListOrderAdminResponseItem{
+			Id:         o.Id,
+			Number:     o.Number,
+			Customer:   o.UserFullName,
+			StatusCode: orderStatusCode,
+			Total:      o.Total,
+			CreatedAt:  timestamppb.New(o.CreatedAt),
+			Products:   products,
+		})
+	}
+
+	return &order.ListOrderAdminResponse{
+		Base:       utils.SuccessResponse("Get list order admin success"),
+		Pagination: metadata,
+		Items:      items,
+	}, nil
+}
+
 func NewOrderService(db *sql.DB, orderRepository repository.IOrderRepository, productRepository repository.IProductRepository) IOrderService {
 	return &orderService{
-		db: db,
+		db:               db,
 		orderRepository:  orderRepository,
 		productRepostory: productRepository,
 	}

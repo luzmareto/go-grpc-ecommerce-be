@@ -6,11 +6,15 @@ option go_package = "github.com/luzmareto/go-grpc-ecommerce-be/pb/order"; // imp
 
 import "buf/validate/validate.proto";
 import "common/base_response.proto";
+import "common/pagination.proto";
+import "google/protobuf/timestamp.proto";
+
 
 package order;
 
 service OrderService {
     rpc CreateOrder (CreateOrderRequest) returns (CreateOrderResponse);
+    rpc ListOrderAdmin (ListOrderAdminRequest) returns (ListOrderAdminResponse);
 }   
 
 message CreateOrderRequestProductItem{
@@ -29,4 +33,31 @@ message CreateOrderRequest {
 message CreateOrderResponse {
     common.BaseResponse base = 1;
     string id = 2;
+}
+
+message ListOrderAdminRequest {
+    common.PaginationRequest pagination = 1;
+}
+
+message ListOrderAdminResponseItemProduct{
+    string id = 1;
+    string name = 2;
+    double price = 3;
+    int64 quantity = 4;
+}
+
+message ListOrderAdminResponseItem{
+    string id = 1;
+    string number = 2;
+    string customer = 3;
+    string status_code = 4;
+    double total = 5;
+    google.protobuf.Timestamp created_at = 6;
+    repeated ListOrderAdminResponseItemProduct products = 7;
+}
+
+message ListOrderAdminResponse{
+    common.BaseResponse base = 1;
+    common.PaginationResponse pagination = 2;
+    repeated ListOrderAdminResponseItem items = 3;
 }
