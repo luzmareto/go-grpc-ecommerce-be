@@ -21,6 +21,7 @@ type IOrderRepository interface {
 	GetOrderById(ctx context.Context, orderId string) (*entity.Order, error)
 	UpdateOrder(ctx context.Context, order *entity.Order) error
 	GetListOrderAdminPagination(ctx context.Context, pagination *common.PaginationRequest) ([]*entity.Order, *common.PaginationResponse, error)
+	GetListOrderPagination(ctx context.Context, pagination *common.PaginationRequest, userId string) ([]*entity.Order, *common.PaginationResponse, error)
 }
 
 type orderRepository struct {
@@ -244,34 +245,150 @@ func (or *orderRepository) GetListOrderAdminPagination(ctx context.Context, pagi
 		orderItemsMap[orderEntity.Id] = make([]*entity.OrderItem, 0)
 	}
 
-	idsJoin := strings.Join(ids, ", ")
-	baseOrderItemQuery := fmt.Sprintf("SELECT product_id, product_name, product_price, quantity, order_id FROM order_item WHERE is_deleted = false AND order_id IN (%s)", idsJoin)
-	rows, err = or.db.QueryContext(
-		ctx,
-		baseOrderItemQuery,
-	)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	for rows.Next() {
-		var item entity.OrderItem
-		rows.Scan(
-			&item.ProductId,
-			&item.ProductName,
-			&item.ProductPrice,
-			&item.Quantity,
-			&item.OrderId,
+	if len(orders) > 0 {
+		idsJoin := strings.Join(ids, ", ")
+		baseOrderItemQuery := fmt.Sprintf("SELECT product_id, product_name, product_price, quantity, order_id FROM order_item WHERE is_deleted = false AND order_id IN (%s)", idsJoin)
+		rows, err = or.db.QueryContext(
+			ctx,
+			baseOrderItemQuery,
 		)
 		if err != nil {
 			return nil, nil, err
 		}
 
-		orderItemsMap[item.OrderId] = append(orderItemsMap[item.OrderId], &item)
+		for rows.Next() {
+			var item entity.OrderItem
+			rows.Scan(
+				&item.ProductId,
+				&item.ProductName,
+				&item.ProductPrice,
+				&item.Quantity,
+				&item.OrderId,
+			)
+			if err != nil {
+				return nil, nil, err
+			}
+
+			orderItemsMap[item.OrderId] = append(orderItemsMap[item.OrderId], &item)
+		}
+
+		for i, o := range orders {
+			orders[i].Items = orderItemsMap[o.Id]
+		}
 	}
 
-	for i, o := range orders {
-		orders[i].Items = orderItemsMap[o.Id]
+	var metadata common.PaginationResponse = common.PaginationResponse{
+		CurrentPage:    pagination.CurrentPage,
+		TotalPageCount: int32(totalPages),
+		ItemPerPage:    pagination.ItemPerPage,
+		TotalItemCount: int32(totalCount),
+	}
+	return orders, &metadata, nil
+}
+
+func (or *orderRepository) GetListOrderPagination(ctx context.Context, pagination *common.PaginationRequest, userId string) ([]*entity.Order, *common.PaginationResponse, error) {
+	row := or.db.QueryRowContext(
+		ctx,
+		"SELECT COUNT(*) FROM \"order\" WHERE is_deleted = false AND user_id = $1",
+		userId,
+	)
+	if row.Err() != nil {
+		return nil, nil, row.Err()
+	}
+
+	var totalCount int
+	err := row.Scan(&totalCount)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	offset := (pagination.CurrentPage - 1) * pagination.ItemPerPage
+	totalPages := (totalCount + int(pagination.ItemPerPage) - 1) / int(pagination.ItemPerPage)
+
+	allowedSorts := map[string]string{
+		"number":     "number",
+		"customer":   "user_full_name",
+		"total":      "total",
+		"created_at": "created_at",
+	}
+	sort := "ORDER BY created_at DESC"
+	if pagination.Sort != nil {
+		direction := "ASC"
+		sortField, ok := allowedSorts[pagination.Sort.Field]
+		if ok {
+			if pagination.Sort.Direction == "desc" {
+				direction = "DESC"
+			}
+			sort = fmt.Sprintf("ORDER BY %s %s", sortField, direction)
+		}
+	}
+
+	baseQuery := fmt.Sprintf("SELECT id, number, order_status_code, total, user_full_name, created_at, expired_at, xendit_invoice_url FROM \"order\" WHERE is_deleted = false AND user_id = $1 %s LIMIT $2 OFFSET $3", sort)
+	rows, err := or.db.QueryContext(
+		ctx,
+		baseQuery,
+		userId,
+		pagination.ItemPerPage,
+		offset,
+	)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	orders := make([]*entity.Order, 0)
+	ids := make([]string, 0)
+	orderItemsMap := make(map[string][]*entity.OrderItem)
+	for rows.Next() {
+		var orderEntity entity.Order
+		err = rows.Scan(
+			&orderEntity.Id,
+			&orderEntity.Number,
+			&orderEntity.OrderStatusCode,
+			&orderEntity.Total,
+			&orderEntity.UserFullName,
+			&orderEntity.CreatedAt,
+			&orderEntity.ExpiredAt,
+			&orderEntity.XenditInvoiceUrl,
+		)
+		if err != nil {
+			return nil, nil, err
+		}
+
+		orders = append(orders, &orderEntity)
+		ids = append(ids, fmt.Sprintf("'%s'", orderEntity.Id))
+		orderItemsMap[orderEntity.Id] = make([]*entity.OrderItem, 0)
+	}
+
+	if len(orders) > 0 {
+		idsJoin := strings.Join(ids, ", ")
+		baseOrderItemQuery := fmt.Sprintf("SELECT product_id, product_name, product_price, quantity, order_id FROM order_item WHERE is_deleted = false AND order_id IN (%s)", idsJoin)
+		rows, err = or.db.QueryContext(
+			ctx,
+			baseOrderItemQuery,
+		)
+		if err != nil {
+			return nil, nil, err
+		}
+
+		for rows.Next() {
+			var item entity.OrderItem
+			rows.Scan(
+				&item.ProductId,
+				&item.ProductName,
+				&item.ProductPrice,
+				&item.Quantity,
+				&item.OrderId,
+			)
+			if err != nil {
+				return nil, nil, err
+			}
+
+			orderItemsMap[item.OrderId] = append(orderItemsMap[item.OrderId], &item)
+		}
+
+		for i, o := range orders {
+			orders[i].Items = orderItemsMap[o.Id]
+		}
 	}
 
 	var metadata common.PaginationResponse = common.PaginationResponse{
