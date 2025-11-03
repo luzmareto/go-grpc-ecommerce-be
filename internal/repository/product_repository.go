@@ -31,8 +31,8 @@ type productRepository struct {
 	db database.DatabaseQuery
 }
 
-func (repo *productRepository) WithTrancastion(tx *sql.Tx) IProductRepository{
-	return  &productRepository{
+func (repo *productRepository) WithTrancastion(tx *sql.Tx) IProductRepository {
+	return &productRepository{
 		db: tx,
 	}
 }
@@ -95,7 +95,7 @@ func (repo *productRepository) GetProductById(ctx context.Context, id string) (*
 	return &productEntity, nil
 }
 
-func (repo *productRepository)	GetProductsByIds(ctx context.Context, ids []string) ([]*entity.Product, error){
+func (repo *productRepository) GetProductsByIds(ctx context.Context, ids []string) ([]*entity.Product, error) {
 	queryIds := make([]string, len(ids))
 	for i, id := range ids {
 		queryIds[i] = fmt.Sprintf("'%s'", id)
@@ -126,8 +126,6 @@ func (repo *productRepository)	GetProductsByIds(ctx context.Context, ids []strin
 
 	return products, nil
 }
-
-
 
 func (repo *productRepository) UpdateProduct(ctx context.Context, product *entity.Product) error {
 	_, err := repo.db.ExecContext(
@@ -164,32 +162,30 @@ func (repo *productRepository) DeleteProduct(ctx context.Context, id string, del
 }
 
 func (repo *productRepository) GetProductsPagination(ctx context.Context, pagination *common.PaginationRequest) ([]*entity.Product, *common.PaginationResponse, error) {
- 	row := repo.db.QueryRowContext(ctx, "SELECT COUNT(*) FROM product WHERE is_deleted = false")
+	row := repo.db.QueryRowContext(ctx, "SELECT COUNT(*) FROM product WHERE is_deleted = false")
 	if row.Err() != nil {
-		return  nil, nil, row.Err()
+		return nil, nil, row.Err()
 	}
 
 	var totalCount int
-	err :=  row.Scan(&totalCount)
+	err := row.Scan(&totalCount)
 	if err != nil {
-		return  nil, nil, err
+		return nil, nil, err
 	}
 
-
-	offset := (pagination.CurrentPage -1) * pagination.ItemPerPage
+	offset := (pagination.CurrentPage - 1) * pagination.ItemPerPage
 	totalPages := (totalCount + int(pagination.ItemPerPage) - 1) / int(pagination.ItemPerPage)
-	
+
 	rows, err := repo.db.QueryContext(
 		ctx,
 		"SELECT id, name, description, price, image_file_name FROM product WHERE is_deleted = false ORDER BY created_at DESC LIMIT $1 OFFSET $2",
 		pagination.ItemPerPage,
 		offset,
-
 	)
 
 	if err != nil {
 		return nil, nil, err
-	}	
+	}
 
 	var products []*entity.Product = make([]*entity.Product, 0)
 	for rows.Next() {
@@ -203,49 +199,47 @@ func (repo *productRepository) GetProductsPagination(ctx context.Context, pagina
 			&product.ImageFileName,
 		)
 		if err != nil {
-		return nil, nil, err
+			return nil, nil, err
 		}
 
 		products = append(products, &product)
 	}
 
-
 	paginationResponse := &common.PaginationResponse{
-		CurrentPage: pagination.CurrentPage,
-		ItemPerPage: pagination.ItemPerPage,
+		CurrentPage:    pagination.CurrentPage,
+		ItemPerPage:    pagination.ItemPerPage,
 		TotalItemCount: int32(totalCount),
 		TotalPageCount: int32(totalPages),
 	}
-	return products,paginationResponse,nil
+	return products, paginationResponse, nil
 }
 
 func (repo *productRepository) GetProductsPaginationAdmin(ctx context.Context, pagination *common.PaginationRequest) ([]*entity.Product, *common.PaginationResponse, error) {
- 	row := repo.db.QueryRowContext(ctx, "SELECT COUNT(*) FROM product WHERE is_deleted = false")
+	row := repo.db.QueryRowContext(ctx, "SELECT COUNT(*) FROM product WHERE is_deleted = false")
 	if row.Err() != nil {
-		return  nil, nil, row.Err()
+		return nil, nil, row.Err()
 	}
 
 	var totalCount int
-	err :=  row.Scan(&totalCount)
+	err := row.Scan(&totalCount)
 	if err != nil {
-		return  nil, nil, err
+		return nil, nil, err
 	}
 
-
-	offset := (pagination.CurrentPage -1) * pagination.ItemPerPage
+	offset := (pagination.CurrentPage - 1) * pagination.ItemPerPage
 	totalPages := (totalCount + int(pagination.ItemPerPage) - 1) / int(pagination.ItemPerPage)
-	
+
 	allowedSorts := map[string]bool{
-		"name": true,
+		"name":        true,
 		"description": true,
-		"price": true,
+		"price":       true,
 	}
 
 	orderQuery := "ORDER BY created_at DESC"
-	if pagination.Sort != nil && allowedSorts[pagination.Sort.Field ]{
+	if pagination.Sort != nil && allowedSorts[pagination.Sort.Field] {
 		direction := "asc"
 		if pagination.Sort.Direction == "desc" {
-		direction = "desc"
+			direction = "desc"
 		}
 		orderQuery = fmt.Sprintf("ORDER BY %s %s", pagination.Sort.Field, direction)
 	}
@@ -256,12 +250,11 @@ func (repo *productRepository) GetProductsPaginationAdmin(ctx context.Context, p
 		baseQuery,
 		pagination.ItemPerPage,
 		offset,
-
 	)
 
 	if err != nil {
 		return nil, nil, err
-	}	
+	}
 
 	var products []*entity.Product = make([]*entity.Product, 0)
 	for rows.Next() {
@@ -275,35 +268,51 @@ func (repo *productRepository) GetProductsPaginationAdmin(ctx context.Context, p
 			&product.ImageFileName,
 		)
 		if err != nil {
-		return nil, nil, err
+			return nil, nil, err
 		}
 
 		products = append(products, &product)
 	}
 
-
 	paginationResponse := &common.PaginationResponse{
-		CurrentPage: pagination.CurrentPage,
-		ItemPerPage: pagination.ItemPerPage,
+		CurrentPage:    pagination.CurrentPage,
+		ItemPerPage:    pagination.ItemPerPage,
 		TotalItemCount: int32(totalCount),
 		TotalPageCount: int32(totalPages),
 	}
-	return products,paginationResponse,nil
+	return products, paginationResponse, nil
 }
 
-
 func (repo *productRepository) GetProductHighlight(ctx context.Context) ([]*entity.Product, error) {
-//highligh 3 data penjualan teratas pada beranda
+	//highligh 3 data penjualan teratas pada beranda
 	rows, err := repo.db.QueryContext(
-		ctx, 
-		"SELECT id, name, description, price, image_file_name FROM product WHERE is_deleted = false ORDER BY created_at DESC LIMIT 3",
+		ctx,
+		`SELECT
+    id,
+    name,
+    description,
+    price,
+    image_file_name
+FROM
+    product
+WHERE
+    id IN (
+        SELECT p.id
+        FROM product p
+        JOIN order_item oi ON oi.product_id = p.id
+        WHERE
+            p.is_deleted = false AND oi.is_deleted = false
+        GROUP BY p.id ORDER BY COUNT(*) DESC
+        LIMIT 3
+    );
+		`,
 	)
 	if err != nil {
 		return nil, err
 	}
 
 	var products []*entity.Product = make([]*entity.Product, 0)
-	for rows.Next(){
+	for rows.Next() {
 		var productEntity entity.Product
 
 		err = rows.Scan(
