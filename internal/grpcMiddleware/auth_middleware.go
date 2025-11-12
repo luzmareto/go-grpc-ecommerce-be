@@ -13,17 +13,17 @@ type authMiddleware struct {
 	cacheService *gocache.Cache
 }
 
-//api yang tidak perlu login
+// api yang tidak perlu login
 var publicApis = map[string]bool{
-	 "/auth.AuthService/Login": true,
-	 "/auth.AuthService/Register": true,
-	 "/product.ProductService/DetailProduct": true,
-	 "/product.ProductService/ListProduct": true,
-	 "/product.ProductService/ListProducts": true,
-	 "/product.ProductService/HighlightProducts": true,
-	 "/product.ProductService/HighlightProduct": true,
+	"/auth.AuthService/Login":                          true,
+	"/auth.AuthService/Register":                       true,
+	"/product.ProductService/DetailProduct":            true,
+	"/product.ProductService/ListProduct":              true,
+	"/product.ProductService/ListProducts":             true,
+	"/product.ProductService/HighlightProducts":        true,
+	"/product.ProductService/HighlightProduct":         true,
+	"/newsletter.NewsletterService/SubcribeNewsletter": true,
 }
-
 
 func (am *authMiddleware) Middleware(ctx context.Context, req any, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (resp any, err error) {
 	if publicApis[info.FullMethod] {

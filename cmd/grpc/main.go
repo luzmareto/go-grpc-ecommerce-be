@@ -1,6 +1,7 @@
 package main
 
 // go run cmd/grpc/main.go
+// grpcwebproxy --backend_addr=localhost:50052 --server_bind_address=0.0.0.0 --server_http_debug_port=8080 --run_tls_server=false --backend_max_call_recv_msg_size=577659248 --allow_all_origins
 
 import (
 	"context"
@@ -16,6 +17,7 @@ import (
 	"github.com/luzmareto/go-grpc-ecommerce-be/internal/service"
 	"github.com/luzmareto/go-grpc-ecommerce-be/pb/auth"
 	"github.com/luzmareto/go-grpc-ecommerce-be/pb/cart"
+	"github.com/luzmareto/go-grpc-ecommerce-be/pb/newsletter"
 	"github.com/luzmareto/go-grpc-ecommerce-be/pb/order"
 	"github.com/luzmareto/go-grpc-ecommerce-be/pb/product"
 	"github.com/luzmareto/go-grpc-ecommerce-be/pkg/database"
@@ -30,7 +32,7 @@ func main() {
 	godotenv.Load()
 
 	xendit.Opt.SecretKey = os.Getenv("XENDIT_SECRET")
-	
+
 	lis, err := net.Listen("tcp", ":50052")
 	if err != nil {
 		log.Panicf("error when listen %v", err)
@@ -50,14 +52,18 @@ func main() {
 	productRepository := repository.NewProductRepository(db)
 	productService := service.NewProductService(productRepository)
 	productHandler := handler.NewProductHandler(productService)
-	
+
 	cartRepository := repository.NewCartRepository(db)
 	cartService := service.NewCartService(productRepository, cartRepository)
 	cartHandler := handler.NewCartHandler(cartService)
 
 	orderRepository := repository.NewOrderRepository(db)
-	orderService := service.NewOrderService(db, orderRepository,productRepository)
+	orderService := service.NewOrderService(db, orderRepository, productRepository)
 	orderHandler := handler.NewOrderHandler(orderService)
+
+	newsletterRepository := repository.NewNewsLetterRespository((db))
+	newsletterService := service.NewNewsLetterService(newsletterRepository)
+	newsletterHandler := handler.NewNewsletterHandler(newsletterService)
 
 	serv := grpc.NewServer(
 		grpc.ChainUnaryInterceptor(
@@ -70,6 +76,7 @@ func main() {
 	product.RegisterProductServiceServer(serv, productHandler)
 	cart.RegisterCartServiceServer(serv, cartHandler)
 	order.RegisterOrderServiceServer(serv, orderHandler)
+	newsletter.RegisterNewsletterServiceServer(serv, newsletterHandler)
 
 	if os.Getenv("ENVIRONMENT") == "dev" {
 		reflection.Register(serv)
